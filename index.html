@@ -1,0 +1,3155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐻곰탱이B.C🎳 - 운명의 매칭: 제비뽑곰</title>
+    <!-- SheetJS (Excel 파싱) - defer 적용으로 오프라인/차단 환경에서도 화면 렌더링에 영향 없음 -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js" defer></script>
+    <style>
+        /* =====================================================================
+         * 기본 리셋 및 테마 변수 (외부 CSS 프레임워크 0% - 100% 자체 스타일)
+         * ===================================================================== */
+        :root {
+            --bg-page: #faf8f5;
+            --bg-card: #ffffff;
+            --bg-subtle: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-light: #e2e8f0;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-soft: #eff6ff;
+            --team1: #2563eb;
+            --team2: #e11d48;
+            --team3: #059669;
+            --amber: #d97706;
+            --amber-soft: #fffbeb;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow-card: 0 6px 20px -4px rgba(15, 23, 42, 0.08), 0 2px 6px -2px rgba(15, 23, 42, 0.04);
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 16px;
+            background-color: var(--bg-page);
+            color: var(--text-main);
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+            line-height: 1.5;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        @media (min-width: 768px) {
+            body { padding: 24px; }
+        }
+
+        /* 레이아웃 컨테이너 */
+        .app-shell {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        @media (min-width: 1024px) {
+            .app-shell {
+                flex-direction: row;
+                align-items: flex-start;
+                gap: 24px;
+            }
+        }
+
+        .sidebar {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        @media (min-width: 1024px) {
+            .sidebar {
+                width: 360px;
+                flex-shrink: 0;
+            }
+        }
+
+        .main-content {
+            width: 100%;
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* 공통 카드 */
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-card);
+            padding: 20px;
+            border: 1px solid rgba(226, 232, 240, 0.7);
+        }
+
+        .card-accent-blue { border-top: 4px solid var(--primary); }
+        .card-accent-amber {
+            border-top: 4px solid #f59e0b;
+            background: linear-gradient(135deg, #ffffff 0%, #ffffff 65%, #fffbeb 100%);
+        }
+
+        /* 유틸리티 */
+        .hidden { display: none !important; }
+        .flex-between {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .flex-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        /* 타이포그래피 & 배지 */
+        .section-title {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 800;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #fef3c7;
+            color: #92400e;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .hero-title {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            color: #0f172a;
+        }
+
+        @media (min-width: 640px) {
+            .hero-title { font-size: 28px; }
+        }
+
+        .hero-desc {
+            margin: 6px 0 0;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .status-badge {
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #f1f5f9;
+            color: #64748b;
+        }
+        .status-badge.ready { background: #d1fae5; color: #047857; }
+        .status-badge.sample { background: #fef3c7; color: #92400e; }
+        .status-badge.partial { background: #ffedd5; color: #c2410c; }
+
+        /* 폼 요소 */
+        .form-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 6px;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid var(--border-light);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-main);
+            background: #ffffff;
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .form-input:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 7px;
+            border: 1.5px solid var(--border-light);
+            border-radius: var(--radius-md);
+            background: var(--bg-subtle);
+            font-size: 12px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .file-input::file-selector-button {
+            margin-right: 10px;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 999px;
+            background: #dbeafe;
+            color: #1d4ed8;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .file-input.green::file-selector-button {
+            background: #d1fae5;
+            color: #047857;
+        }
+
+        .divider-text {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+        .divider-text::before, .divider-text::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-light);
+        }
+
+        /* 버튼 스타일 */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-family: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.12s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+            user-select: none;
+        }
+        .btn:active { transform: scale(0.98); }
+
+        .btn-sample {
+            width: 100%;
+            padding: 11px 14px;
+            background: #fffbeb;
+            color: #92400e;
+            border: 1.5px solid #fcd34d;
+            font-size: 13px;
+        }
+        .btn-sample:hover { background: #fef3c7; }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px 16px;
+            background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 800;
+            box-shadow: 0 8px 18px -4px rgba(37, 99, 235, 0.35);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #1d4ed8 0%, #4338ca 100%);
+        }
+
+        .btn-soft {
+            padding: 8px 12px;
+            font-size: 12px;
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+        .btn-soft:hover { background: #dbeafe; }
+
+        .btn-neutral {
+            padding: 8px 12px;
+            font-size: 12px;
+            background: #f1f5f9;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+        }
+        .btn-neutral:hover { background: #e2e8f0; }
+
+        .btn-kakao {
+            padding: 10px 14px;
+            font-size: 13px;
+            font-weight: 800;
+            background: #fee500;
+            color: #191919;
+        }
+        .btn-kakao:hover { background: #f5dc00; }
+
+        .btn-sound {
+            width: 100%;
+            padding: 9px 12px;
+            font-size: 12px;
+            background: #ffffff;
+            color: #334155;
+            border: 1.5px solid var(--border-light);
+        }
+        .btn-sound:hover { background: #f8fafc; }
+
+        /* 4가지 추첨 모드 선택 카드 */
+        .mode-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .mode-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 11px 12px;
+            border: 2px solid var(--border-light);
+            border-radius: var(--radius-md);
+            background: #ffffff;
+            cursor: pointer;
+            transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+        }
+        .mode-card:hover { border-color: #cbd5e1; }
+        .mode-card.active {
+            border-color: var(--primary);
+            background: var(--primary-soft);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .mode-emoji { font-size: 22px; line-height: 1.1; }
+        .mode-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .mode-new {
+            font-size: 10px;
+            font-weight: 800;
+            padding: 1px 6px;
+            border-radius: 999px;
+            background: #ffe4e6;
+            color: #be123c;
+        }
+        .mode-desc {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* 속도 선택 바 */
+        .speed-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            background: #f1f5f9;
+            padding: 4px;
+            border-radius: var(--radius-md);
+        }
+
+        .speed-btn {
+            padding: 7px 6px;
+            border: none;
+            border-radius: var(--radius-sm);
+            background: transparent;
+            color: #475569;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.15s ease, color 0.15s ease;
+        }
+        .speed-btn.active {
+            background: #ffffff;
+            color: var(--primary);
+            box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+        }
+
+        .stage-speed-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+            background: #f8fafc;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 8px 12px;
+            margin-bottom: 12px;
+        }
+
+        .stage-speed-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 8px;
+            background: transparent;
+            color: #475569;
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .stage-speed-btn.active {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        /* 알림 박스 */
+        .alert-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .alert-stack:empty { display: none; }
+
+        .alert-box {
+            padding: 14px 16px;
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            border: 1.5px solid transparent;
+        }
+        .alert-success { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
+        .alert-warning { background: #fffbeb; border-color: #fcd34d; color: #92400e; }
+        .alert-error { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+
+        .alert-sub {
+            display: block;
+            margin-top: 6px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            background: rgba(251, 191, 36, 0.2);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        /* 추첨 스테이지 */
+        .stage-header {
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .stage-progress {
+            font-size: 12px;
+            font-weight: 800;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .stage-banner {
+            min-height: 54px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .banner-placeholder {
+            font-size: 12px;
+            font-weight: 700;
+            color: #64748b;
+            background: #f1f5f9;
+            padding: 8px 16px;
+            border-radius: 999px;
+        }
+
+        .banner-reveal {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 9px 18px;
+            border-radius: 14px;
+            background: #ffffff;
+            border: 2px solid var(--primary);
+            box-shadow: 0 6px 16px -4px rgba(15, 23, 42, 0.12);
+            animation: popIn 0.18s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        .canvas-wrap {
+            position: relative;
+            width: 100%;
+            border-radius: 14px;
+            overflow: hidden;
+            background: #0f172a;
+            border: 1px solid #1e293b;
+        }
+        .canvas-wrap.scrollable {
+            max-height: 660px;
+            overflow-y: auto;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            touch-action: manipulation;
+        }
+
+        /* 실시간 팀 보드 & 최종 결과 그리드 */
+        .teams-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        @media (min-width: 640px) {
+            .teams-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+            .teams-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+        }
+
+        .live-team-card {
+            background: #ffffff;
+            border-radius: var(--radius-md);
+            border: 2px solid var(--border-light);
+            padding: 12px;
+        }
+
+        .live-team-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .pill-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            min-height: 32px;
+        }
+
+        .member-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid transparent;
+            animation: badgeIn 0.22s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        .live-team-foot {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 최종 결과 카드 */
+        .result-header-card {
+            background: linear-gradient(90deg, #eff6ff 0%, #ffffff 50%, #ecfdf5 100%);
+            border: 1px solid #bfdbfe;
+        }
+
+        .final-team-card {
+            background: #ffffff;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            border: 2px solid var(--border-light);
+            box-shadow: var(--shadow-card);
+        }
+
+        .final-team-banner {
+            padding: 12px 16px;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 900;
+        }
+
+        .final-team-body {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .avg-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .lanes-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        @media (min-width: 640px) {
+            .lanes-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (min-width: 1280px) {
+            .lanes-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+
+        .lane-card {
+            background: #f8fafc;
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-md);
+            padding: 14px;
+        }
+
+        .lane-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--border-light);
+            font-weight: 800;
+            font-size: 14px;
+        }
+
+        .lane-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .lane-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 6px 8px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .lane-tag {
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 6px;
+            flex-shrink: 0;
+        }
+
+        /* 폭죽 & 토스트 */
+        #confettiCanvas {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 60;
+        }
+
+        #toastContainer {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 70;
+            pointer-events: none;
+        }
+
+        .toast {
+            padding: 12px 20px;
+            border-radius: 14px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #ffffff;
+            background: #0f172a;
+            box-shadow: 0 12px 24px -6px rgba(15, 23, 42, 0.35);
+            animation: popIn 0.2s ease-out forwards;
+        }
+        .toast.success { background: #059669; }
+        .toast.warning { background: #d97706; }
+
+        @keyframes badgeIn {
+            0% { transform: translateY(8px) scale(0.8); opacity: 0; }
+            100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        @keyframes popIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 경량 폭죽 캔버스 -->
+    <canvas id="confettiCanvas"></canvas>
+
+    <div class="app-shell">
+        <!-- 왼쪽 사이드바 -->
+        <aside class="sidebar">
+            <!-- 1. 데이터 및 설정 카드 -->
+            <div class="card card-accent-blue form-stack">
+                <div class="flex-between">
+                    <h2 class="section-title"><span>📁</span> 데이터 &amp; 설정</h2>
+                    <span id="dataStatusBadge" class="status-badge">파일 대기중</span>
+                </div>
+
+                <button type="button" id="sampleBtn" class="btn btn-sample">
+                    <span>🧪</span> 샘플 데이터로 바로 체험하기 (16명)
+                </button>
+
+                <div class="divider-text">또는 엑셀 파일 업로드</div>
+
+                <div>
+                    <label for="scoreFile" class="form-label">분기에버.xlsx (에버리지)</label>
+                    <input type="file" id="scoreFile" accept=".xlsx" class="file-input">
+                </div>
+
+                <div>
+                    <label for="attendFile" class="form-label">참석자명단.xlsx</label>
+                    <input type="file" id="attendFile" accept=".xlsx" class="file-input green">
+                </div>
+
+                <div class="form-grid-2">
+                    <div>
+                        <label for="numTeams" class="form-label">나눌 팀 개수 (2~3)</label>
+                        <input type="number" id="numTeams" min="2" max="3" value="2" class="form-input">
+                    </div>
+                    <div>
+                        <label for="numLanesInput" class="form-label">사용할 레인 개수</label>
+                        <input type="number" id="numLanesInput" min="2" max="20" value="6" class="form-input">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="laneStrategy" class="form-label">레인 배정 방식</label>
+                    <select id="laneStrategy" class="form-select">
+                        <option value="cross">지그재그 교차 (팀1-팀2-팀1-팀2...)</option>
+                        <option value="group">팀별 연속 배정 (팀1-팀1-팀1-팀2-팀2...)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 2. 추첨 연출 & 속도 설정 카드 -->
+            <div class="card form-stack">
+                <h2 class="section-title"><span>🎮</span> 추첨 애니메이션 선택</h2>
+
+                <div class="mode-list" id="modeSelector">
+                    <div class="mode-card active" data-mode="race">
+                        <div class="mode-emoji">🏃</div>
+                        <div>
+                            <div class="mode-title">깃발 뽑기 달리기 <span class="mode-new">NEW</span></div>
+                            <div class="mode-desc">스퍼트와 역전극! 결승선 깃발을 뽑는 순간 팀 공개</div>
+                        </div>
+                    </div>
+                    <div class="mode-card" data-mode="ladder">
+                        <div class="mode-emoji">🪜</div>
+                        <div>
+                            <div class="mode-title">스릴만점 사다리타기</div>
+                            <div class="mode-desc">도착 전까지 비밀색! 바닥 도달 순간 팀 공개</div>
+                        </div>
+                    </div>
+                    <div class="mode-card" data-mode="lottery">
+                        <div class="mode-emoji">🎰</div>
+                        <div>
+                            <div class="mode-title">운명의 볼링공 뽑기</div>
+                            <div class="mode-desc">비밀 볼링공이 튀어나오며 팀 색으로 변신</div>
+                        </div>
+                    </div>
+                    <div class="mode-card" data-mode="strike">
+                        <div class="mode-emoji">🎳</div>
+                        <div>
+                            <div class="mode-title">스트라이크 핀 추첨</div>
+                            <div class="mode-desc">핀이 부서지는 순간 팀과 이름이 시원하게 공개</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex-between" style="margin-bottom:6px;">
+                        <span class="form-label" style="margin:0;">⚡ 실시간 추첨 속도</span>
+                        <span style="font-size:11px;font-weight:700;color:#2563eb;">진행 중 즉시 변경</span>
+                    </div>
+                    <div class="speed-group">
+                        <button type="button" class="speed-btn" data-speed="1">1x 보통</button>
+                        <button type="button" class="speed-btn active" data-speed="2">2x 빠름</button>
+                        <button type="button" class="speed-btn" data-speed="4">4x 초고속</button>
+                    </div>
+                </div>
+
+                <button type="button" id="soundToggleBtn" class="btn btn-sound">
+                    <span id="soundIcon">🔊</span>
+                    <span id="soundLabel">효과음 ON</span>
+                </button>
+
+                <button type="button" id="startBtn" class="btn btn-primary">
+                    <span>🎲</span> 팀 구성 &amp; 추첨 시작
+                </button>
+            </div>
+        </aside>
+
+        <!-- 오른쪽 메인 영역 -->
+        <main class="main-content">
+            <header class="card card-accent-amber">
+                <div class="flex-between">
+                    <div>
+                        <div class="hero-badge">🐻 곰탱이 볼링클럽 · 스포일러 없는 60fps 매칭</div>
+                        <h1 class="hero-title">🕹️ 운명의 매칭: 제비뽑곰 🐻🎳</h1>
+                        <p class="hero-desc">공정한 1,000회 밸런스 시뮬레이션과 끝까지 결과를 알 수 없는 스릴만점 추첨!</p>
+                    </div>
+                    <div style="font-size:36px;user-select:none;">🐻🎳</div>
+                </div>
+            </header>
+
+            <!-- 알림 영역 -->
+            <div id="alertBox" class="alert-stack"></div>
+
+            <!-- 추첨 스테이지 카드 -->
+            <section id="stageCard" class="card card-accent-blue hidden">
+                <div class="flex-between stage-header">
+                    <div class="flex-row">
+                        <span id="stageModeEmoji" style="font-size:24px;">🏃</span>
+                        <div>
+                            <h2 id="stageTitle" class="section-title">깃발 뽑기 달리기</h2>
+                            <div id="stageSubtitle" style="font-size:12px;color:#64748b;">결승선 비밀 깃발(?)을 뽑는 순간 팀 컬러가 공개됩니다!</div>
+                        </div>
+                    </div>
+                    <div class="flex-row">
+                        <span id="stageProgressBadge" class="stage-progress">준비중</span>
+                        <button type="button" id="replaySameBtn" class="btn btn-soft">🔁 같은 결과로 연출 다시 보기</button>
+                        <button type="button" id="skipAnimBtn" class="btn btn-neutral">⏭️ 즉시 결과 보기(건너뛰기)</button>
+                    </div>
+                </div>
+
+                <!-- 스테이지 속도 & 사다리 전용 컨트롤 -->
+                <div class="stage-speed-bar">
+                    <div class="flex-row">
+                        <span style="font-size:12px;font-weight:700;color:#64748b;">속도:</span>
+                        <button type="button" class="stage-speed-btn" data-speed="1">1x 보통</button>
+                        <button type="button" class="stage-speed-btn active" data-speed="2">2x 빠름</button>
+                        <button type="button" class="stage-speed-btn" data-speed="4">4x 초고속</button>
+                    </div>
+                    <div id="ladderControls" class="flex-row hidden">
+                        <button type="button" id="ladderAllBtn" class="btn btn-soft" style="background:#2563eb;color:#fff;">🚀 전체 동시 출발</button>
+                        <button type="button" id="ladderSeqBtn" class="btn btn-soft">👤 한 명씩 추적</button>
+                        <span style="font-size:11px;color:#64748b;font-weight:600;">💡 상단 이름 클릭 시 개별 출발</span>
+                    </div>
+                </div>
+
+                <!-- 당첨 공개 배너 -->
+                <div id="stageTopBanner" class="stage-banner"></div>
+
+                <!-- 캔버스 -->
+                <div id="stageCanvasWrapper" class="canvas-wrap">
+                    <canvas id="stageCanvas"></canvas>
+                </div>
+
+                <!-- 실시간 팀 보드 -->
+                <div id="liveTeamsBoard" class="teams-grid cols-2"></div>
+            </section>
+
+            <!-- 최종 결과 영역 -->
+            <section id="outputArea" class="form-stack hidden" style="gap:20px;">
+                <div class="card result-header-card flex-between">
+                    <div class="flex-row" style="gap:12px;">
+                        <div style="width:42px;height:42px;border-radius:12px;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;">🏆</div>
+                        <div>
+                            <h2 class="section-title" style="font-size:19px;">팀 구성 완료!</h2>
+                            <div id="balanceSummaryText" style="font-size:12px;font-weight:700;color:#1d4ed8;"></div>
+                        </div>
+                    </div>
+                    <div class="flex-row">
+                        <button type="button" id="copyKakaoBtn" class="btn btn-kakao">📋 카톡 공지용 텍스트 복사</button>
+                        <button type="button" id="replayResultBtn" class="btn btn-soft">🔁 연출 다시 보기</button>
+                        <button type="button" id="rerunBtn" class="btn btn-neutral">🔄 새로 팀 짜기</button>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="section-title" style="margin-bottom:12px;"><span>✅</span> 팀 구성 결과</h3>
+                    <div id="teamsContainer" class="teams-grid cols-2" style="margin-top:0;"></div>
+                </div>
+
+                <div>
+                    <h3 class="section-title" style="margin-bottom:12px;"><span>🎳</span> 랜덤 레인 배정 결과</h3>
+                    <div id="lanesContainer" class="lanes-grid"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="toastContainer"></div>
+
+    <script>
+        /* =====================================================================
+         * 1. 전역 상태 & 팀 테마 설정
+         * ===================================================================== */
+        const MYSTERY = {
+            path: '#f59e0b',
+            pathDim: '#64748b',
+            headFill: '#fef3c7',
+            headStroke: '#f59e0b',
+            tagBg: '#f8fafc',
+            tagBorder: '#94a3b8',
+            tagText: '#1e293b',
+            neutralBalls: ['#475569', '#334155', '#64748b', '#52525b']
+        };
+
+        const TEAM_THEMES = [
+            { name: '팀 1', color: '#2563eb', softBg: '#eff6ff', softBorder: '#bfdbfe', text: '#1d4ed8', emoji: '🔵' },
+            { name: '팀 2', color: '#e11d48', softBg: '#fff1f2', softBorder: '#fecdd3', text: '#be123c', emoji: '🔴' },
+            { name: '팀 3', color: '#059669', softBg: '#ecfdf5', softBorder: '#a7f3d0', text: '#047857', emoji: '🟢' }
+        ];
+
+        const appState = {
+            mode: 'race',
+            speed: 2,
+            soundEnabled: true,
+            isSampleData: false,
+            lastAttendees: null,
+            currentResult: null,
+            isAnimating: false,
+            rafId: null,
+            runId: 0,
+            ladderState: null,
+            raceState: null,
+            liveRevealedSet: new Set(),
+            liveTeamStats: []
+        };
+
+        /* =====================================================================
+         * 2. Web Audio API 합성 효과음 (try/catch 안전 보호)
+         * ===================================================================== */
+        const SoundFX = {
+            ctx: null,
+            lastPlayed: {},
+
+            init() {
+                try {
+                    if (!this.ctx) {
+                        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                        if (AudioCtx) this.ctx = new AudioCtx();
+                    }
+                    if (this.ctx && this.ctx.state === 'suspended') {
+                        this.ctx.resume().catch(() => {});
+                    }
+                } catch (e) {
+                    // 오디오 미지원 환경 무시
+                }
+            },
+
+            canPlay(key, minGapMs) {
+                if (!appState.soundEnabled) return false;
+                const nowMs = performance.now();
+                if (nowMs - (this.lastPlayed[key] || 0) < minGapMs) return false;
+                this.lastPlayed[key] = nowMs;
+                this.init();
+                return !!this.ctx;
+            },
+
+            playTick(freq = 540, volume = 0.045) {
+                if (!this.canPlay('tick', 55)) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now);
+                    osc.frequency.exponentialRampToValueAtTime(freq * 0.55, now + 0.035);
+                    gain.gain.setValueAtTime(volume, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.038);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.042);
+                } catch (e) {}
+            },
+
+            playRevealChime(step = 0) {
+                if (!this.canPlay('pop', 75)) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const base = 420 + (step % 7) * 48;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(base * 0.85, now);
+                    osc.frequency.exponentialRampToValueAtTime(base * 1.45, now + 0.085);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } catch (e) {}
+            },
+
+            playRoll(duration = 0.22) {
+                if (!this.canPlay('roll', 130)) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const dur = Math.max(0.08, Math.min(0.45, duration));
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    const filter = this.ctx.createBiquadFilter();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(95, now);
+                    osc.frequency.linearRampToValueAtTime(145, now + dur);
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 220;
+                    gain.gain.setValueAtTime(0.01, now);
+                    gain.gain.linearRampToValueAtTime(0.08, now + dur * 0.35);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + dur + 0.02);
+                } catch (e) {}
+            },
+
+            playStrike() {
+                if (!this.canPlay('strike', 110)) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const dur = 0.22;
+                    const size = Math.floor(this.ctx.sampleRate * dur);
+                    const buf = this.ctx.createBuffer(1, size, this.ctx.sampleRate);
+                    const data = buf.getChannelData(0);
+                    for (let i = 0; i < size; i++) {
+                        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (size * 0.28));
+                    }
+                    const noise = this.ctx.createBufferSource();
+                    noise.buffer = buf;
+                    const bp = this.ctx.createBiquadFilter();
+                    bp.type = 'bandpass';
+                    bp.frequency.setValueAtTime(1450, now);
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(0.22, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+                    noise.connect(bp);
+                    bp.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    noise.start(now);
+                } catch (e) {}
+            },
+
+            playCountdownBeep(isGo = false) {
+                if (!this.canPlay('pistol', 90)) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = isGo ? 'triangle' : 'sine';
+                    osc.frequency.setValueAtTime(isGo ? 1046.5 : 660, now);
+                    if (isGo) osc.frequency.exponentialRampToValueAtTime(1318.5, now + 0.14);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.17);
+                } catch (e) {}
+            },
+
+            playBoost() {
+                if (!this.canPlay('boost', 240)) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(340, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.11);
+                    gain.gain.setValueAtTime(0.06, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.13);
+                } catch (e) {}
+            },
+
+            playFanfare() {
+                if (!appState.soundEnabled) return;
+                this.init();
+                if (!this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        const start = now + i * 0.075;
+                        const len = i === 3 ? 0.42 : 0.16;
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, start);
+                        gain.gain.setValueAtTime(0.001, start);
+                        gain.gain.linearRampToValueAtTime(0.13, start + 0.018);
+                        gain.gain.exponentialRampToValueAtTime(0.001, start + len);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start(start);
+                        osc.stop(start + len + 0.02);
+                    });
+                } catch (e) {}
+            }
+        };
+
+        /* =====================================================================
+         * 3. 경량 폭죽 엔진
+         * ===================================================================== */
+        const ConfettiEngine = {
+            rafId: null,
+            particles: [],
+            stop() {
+                if (this.rafId !== null) {
+                    cancelAnimationFrame(this.rafId);
+                    this.rafId = null;
+                }
+                const canvas = document.getElementById('confettiCanvas');
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+                this.particles = [];
+            },
+            burst() {
+                this.stop();
+                const canvas = document.getElementById('confettiCanvas');
+                if (!canvas) return;
+                const dpr = Math.min(window.devicePixelRatio || 1, 2);
+                const w = window.innerWidth || 800;
+                const h = window.innerHeight || 600;
+                canvas.width = Math.floor(w * dpr);
+                canvas.height = Math.floor(h * dpr);
+                const ctx = canvas.getContext('2d');
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+                const colors = ['#2563eb', '#e11d48', '#059669', '#f59e0b', '#fbbf24', '#38bdf8'];
+                this.particles = [];
+                for (let i = 0; i < 60; i++) {
+                    const fromLeft = i % 2 === 0;
+                    const angle = fromLeft
+                        ? -Math.PI * (0.22 + Math.random() * 0.25)
+                        : -Math.PI * (0.53 + Math.random() * 0.25);
+                    const speed = 360 + Math.random() * 420;
+                    this.particles.push({
+                        x: fromLeft ? w * 0.15 : w * 0.85,
+                        y: h * 0.65,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        size: 5 + Math.random() * 5,
+                        color: colors[i % colors.length],
+                        rot: Math.random() * Math.PI * 2,
+                        vRot: (Math.random() - 0.5) * 12,
+                        life: 1,
+                        decay: 0.55 + Math.random() * 0.45
+                    });
+                }
+
+                let lastTime = performance.now();
+                const tick = (now) => {
+                    const dt = Math.min((now - lastTime) / 1000, 0.05);
+                    lastTime = now;
+                    ctx.clearRect(0, 0, w, h);
+                    let alive = 0;
+                    for (let i = 0; i < this.particles.length; i++) {
+                        const p = this.particles[i];
+                        if (p.life <= 0) continue;
+                        p.vy += 900 * dt;
+                        p.x += p.vx * dt;
+                        p.y += p.vy * dt;
+                        p.rot += p.vRot * dt;
+                        p.life -= p.decay * dt;
+                        if (p.life > 0 && p.y < h + 30) {
+                            alive++;
+                            ctx.save();
+                            ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
+                            ctx.translate(p.x, p.y);
+                            ctx.rotate(p.rot);
+                            ctx.fillStyle = p.color;
+                            ctx.fillRect(-p.size / 2, -p.size * 0.35, p.size, p.size * 0.7);
+                            ctx.restore();
+                        }
+                    }
+                    if (alive > 0) this.rafId = requestAnimationFrame(tick);
+                    else this.stop();
+                };
+                this.rafId = requestAnimationFrame(tick);
+            }
+        };
+
+        /* =====================================================================
+         * 4. UI 유틸리티
+         * ===================================================================== */
+        function stopStageLoop() {
+            if (appState.rafId !== null) {
+                cancelAnimationFrame(appState.rafId);
+                appState.rafId = null;
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const el = document.createElement('div');
+            el.className = `toast ${type}`;
+            el.textContent = message;
+            container.innerHTML = '';
+            container.appendChild(el);
+            setTimeout(() => {
+                if (container.contains(el)) el.remove();
+            }, 2400);
+        }
+
+        function showAlertBanner(html) {
+            document.getElementById('alertBox').innerHTML = html;
+        }
+
+        function selectMode(mode) {
+            appState.mode = mode;
+            document.querySelectorAll('#modeSelector .mode-card').forEach(el => {
+                el.classList.toggle('active', el.dataset.mode === mode);
+            });
+            SoundFX.playTick(680, 0.04);
+        }
+
+        function setSpeed(val) {
+            appState.speed = val;
+            document.querySelectorAll('.speed-btn, .stage-speed-btn').forEach(btn => {
+                btn.classList.toggle('active', Number(btn.dataset.speed) === val);
+            });
+            SoundFX.playTick(val === 4 ? 880 : val === 2 ? 680 : 500, 0.04);
+        }
+
+        function toggleSound() {
+            appState.soundEnabled = !appState.soundEnabled;
+            document.getElementById('soundIcon').textContent = appState.soundEnabled ? '🔊' : '🔇';
+            document.getElementById('soundLabel').textContent = appState.soundEnabled ? '효과음 ON' : '효과음 OFF';
+            if (appState.soundEnabled) SoundFX.playRevealChime(2);
+        }
+
+        function handleFileSelect() {
+            const sFile = document.getElementById('scoreFile').files[0];
+            const aFile = document.getElementById('attendFile').files[0];
+            const badge = document.getElementById('dataStatusBadge');
+            if (sFile && aFile) {
+                appState.isSampleData = false;
+                badge.textContent = '엑셀 준비완료 ✅';
+                badge.className = 'status-badge ready';
+            } else if (sFile || aFile) {
+                badge.textContent = '1/2 파일 선택됨';
+                badge.className = 'status-badge partial';
+            }
+        }
+
+        /* =====================================================================
+         * 5. 핵심 원본 로직 (100% 보존: 엑셀 파싱, 인원 조정, 1,000회 밸런싱, 레인 배정)
+         * ===================================================================== */
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function readExcel(file, headerIndex) {
+            return new Promise((resolve, reject) => {
+                if (typeof XLSX === 'undefined') {
+                    reject(new Error('엑셀 읽기 라이브러리(SheetJS)가 로드되지 않았습니다. 인터넷 연결을 확인하거나 샘플 체험 모드를 이용해 주세요.'));
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const sheetName = workbook.SheetNames[0];
+                        const sheet = workbook.Sheets[sheetName];
+                        const json = XLSX.utils.sheet_to_json(sheet, { range: headerIndex });
+                        resolve(json);
+                    } catch (err) {
+                        reject(err);
+                    }
+                };
+                reader.onerror = () => reject(new Error('파일을 읽는 중 오류가 발생했습니다.'));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function getShuffledByTier(list, chunkSize) {
+            if (list.length === 0) return [];
+            const sorted = [...list].sort((a, b) => b.score - a.score);
+            const result = [];
+            for (let i = 0; i < sorted.length; i += chunkSize) {
+                result.push(...shuffleArray(sorted.slice(i, i + chunkSize)));
+            }
+            return result;
+        }
+
+        function createSampleAttendees() {
+            const rawSample = [
+                { rawName: '강민선W', score: 178.4 },
+                { rawName: '강상귀', score: 196.2 },
+                { rawName: '한종현', score: 189.5 },
+                { rawName: '김민수', score: 182.1 },
+                { rawName: '이수영W', score: 164.8 },
+                { rawName: '이승훈', score: 191.0 },
+                { rawName: '박지훈', score: 175.6 },
+                { rawName: '정하늘W', score: 158.2 },
+                { rawName: '최도윤', score: 169.4 },
+                { rawName: '윤서연W', score: 161.5 },
+                { rawName: '장우진', score: 184.7 },
+                { rawName: '조은비W', score: 152.9 },
+                { rawName: '임재현', score: 172.3 },
+                { rawName: '송예린W', score: 148.6 },
+                { rawName: '신태양', score: 166.1 },
+                { rawName: '오현우', score: 155.8 }
+            ];
+            return rawSample.map(item => {
+                const nameStr = String(item.rawName).replace(/\s/g, '');
+                const isFemale = nameStr.endsWith('W') || nameStr.endsWith('w');
+                const cleanName = isFemale ? nameStr.slice(0, -1) : nameStr;
+                return { rawName: item.rawName, cleanName, isFemale, score: item.score };
+            });
+        }
+
+        function runSampleMode() {
+            SoundFX.init();
+            appState.isSampleData = true;
+            const badge = document.getElementById('dataStatusBadge');
+            badge.textContent = '샘플 16명 적용중 🧪';
+            badge.className = 'status-badge sample';
+
+            const sample = createSampleAttendees();
+            appState.lastAttendees = sample;
+            executeMatchingAndAnimate(sample, true);
+        }
+
+        async function processFiles() {
+            SoundFX.init();
+            const scoreFile = document.getElementById('scoreFile').files[0];
+            const attendFile = document.getElementById('attendFile').files[0];
+
+            if (!scoreFile || !attendFile) {
+                if (appState.isSampleData && appState.lastAttendees) {
+                    executeMatchingAndAnimate(appState.lastAttendees, true);
+                    return;
+                }
+                showAlertBanner(`
+                    <div class="alert-box alert-error">
+                        ⚠️ 엑셀 파일 2개(분기에버.xlsx, 참석자명단.xlsx)를 모두 업로드해주세요.
+                        파일이 없다면 왼쪽의 <strong>🧪 샘플 데이터로 바로 체험하기</strong> 버튼을 눌러보세요!
+                    </div>
+                `);
+                showToast('두 개의 엑셀 파일을 업로드하거나 샘플 체험을 눌러주세요!', 'warning');
+                return;
+            }
+
+            try {
+                const scoresData = await readExcel(scoreFile, 6);
+                const attendData = await readExcel(attendFile, 0);
+
+                const scoresMap = {};
+                scoresData.forEach(row => {
+                    const rawName = row['이 름'] || row['이름'];
+                    if (!rawName) return;
+                    const nameStr = String(rawName).replace(/\s/g, '');
+                    const isFemale = nameStr.endsWith('W') || nameStr.endsWith('w');
+                    const cleanName = isFemale ? nameStr.slice(0, -1) : nameStr;
+                    scoresMap[cleanName] = {
+                        rawName,
+                        cleanName,
+                        isFemale,
+                        score: parseFloat(row['평균에버']) || 0
+                    };
+                });
+
+                const attendees = [];
+                attendData.forEach(row => {
+                    const rawName = row['이름'] || row['이 름'];
+                    if (!rawName) return;
+                    const cleanName = String(rawName).replace(/\s/g, '');
+                    const status = String(row['참석'] || '').trim().toUpperCase();
+                    if (status === 'O' && scoresMap[cleanName]) {
+                        attendees.push(scoresMap[cleanName]);
+                    }
+                });
+
+                if (attendees.length === 0) {
+                    showAlertBanner(`<div class="alert-box alert-error">❌ 참석자(O)가 없습니다. 참석자명단.xlsx를 확인해주세요.</div>`);
+                    return;
+                }
+
+                appState.isSampleData = false;
+                appState.lastAttendees = attendees;
+                executeMatchingAndAnimate(attendees, false);
+            } catch (error) {
+                showAlertBanner(`<div class="alert-box alert-error">❌ 오류: ${error.message}</div>`);
+            }
+        }
+
+        function executeMatchingAndAnimate(attendees, isSample) {
+            let numTeams = parseInt(document.getElementById('numTeams').value, 10) || 2;
+            numTeams = Math.min(3, Math.max(2, numTeams));
+            document.getElementById('numTeams').value = numTeams;
+
+            let numLanes = parseInt(document.getElementById('numLanesInput').value, 10) || 6;
+            numLanes = Math.min(20, Math.max(2, numLanes));
+            document.getElementById('numLanesInput').value = numLanes;
+
+            const laneStrategy = document.getElementById('laneStrategy').value;
+
+            if (attendees.length < numTeams) {
+                showAlertBanner(`<div class="alert-box alert-error">참석 인원(${attendees.length}명)이 팀 개수(${numTeams}팀)보다 적습니다.</div>`);
+                return;
+            }
+
+            // 1) 인원 조정
+            const remainder = attendees.length % numTeams;
+            const targetSize = Math.floor(attendees.length / numTeams);
+            const dfForTeams = [...attendees];
+            let excluded = [];
+
+            let alertHtml = `
+                <div class="alert-box alert-success">
+                    ${isSample ? '🧪 [샘플 체험] ' : '✅ '}총 ${attendees.length}명의 참석자가 확인되었습니다. (${numTeams}개 팀 · 팀당 ${targetSize}명)
+                </div>`;
+
+            if (remainder !== 0) {
+                dfForTeams.sort((a, b) => a.score - b.score);
+                excluded = dfForTeams.splice(0, remainder);
+                const excludedNames = excluded.map(p => `${p.rawName}(${p.score.toFixed(1)})`).join(', ');
+                alertHtml += `
+                    <div class="alert-box alert-warning">
+                        ⚠️ <strong>인원 조정:</strong> 각 팀 인원을 ${targetSize}명으로 맞추기 위해 가장 점수가 낮은 ${remainder}명을 제외합니다.
+                        <span class="alert-sub">제외 명단: ${excludedNames}</span>
+                    </div>`;
+            }
+            showAlertBanner(alertHtml);
+
+            // 2) 1,000회 팀 밸런싱 시뮬레이션
+            let bestTeams = null;
+            let minAvgDiff = Infinity;
+            const MAX_ATTEMPTS = 1000;
+            const restrictedNames = ['강민선', '강상귀', '한종현', '김민수', '이수영', '이승훈'];
+
+            for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+                const females = getShuffledByTier(dfForTeams.filter(p => p.isFemale), numTeams);
+                const males = getShuffledByTier(dfForTeams.filter(p => !p.isFemale), numTeams);
+
+                const currentTeams = Array.from({ length: numTeams }, () => ({ members: [], sum: 0, f_count: 0, r_count: 0 }));
+
+                females.forEach(person => {
+                    const isRestricted = restrictedNames.includes(person.cleanName);
+                    let candidates = currentTeams;
+                    if (isRestricted) {
+                        const minR = Math.min(...candidates.map(t => t.r_count));
+                        candidates = candidates.filter(t => t.r_count === minR);
+                    }
+                    const minF = Math.min(...candidates.map(t => t.f_count));
+                    const fCandidates = candidates.filter(t => t.f_count === minF);
+                    if (fCandidates.length > 0) candidates = fCandidates;
+
+                    candidates = shuffleArray(candidates);
+                    const targetTeam = candidates.reduce((min, t) => t.sum < min.sum ? t : min, candidates[0]);
+                    targetTeam.members.push(person);
+                    targetTeam.sum += person.score;
+                    targetTeam.f_count += 1;
+                    if (isRestricted) targetTeam.r_count += 1;
+                });
+
+                males.forEach(person => {
+                    const isRestricted = restrictedNames.includes(person.cleanName);
+                    let candidates = currentTeams;
+                    const underFilled = candidates.filter(t => t.members.length < targetSize);
+                    if (underFilled.length > 0) candidates = underFilled;
+
+                    if (isRestricted) {
+                        const minR = Math.min(...candidates.map(t => t.r_count));
+                        const rCandidates = candidates.filter(t => t.r_count === minR);
+                        if (rCandidates.length > 0) candidates = rCandidates;
+                    }
+
+                    candidates = shuffleArray(candidates);
+                    const targetTeam = candidates.reduce((min, t) => t.sum < min.sum ? t : min, candidates[0]);
+                    targetTeam.members.push(person);
+                    targetTeam.sum += person.score;
+                    if (isRestricted) targetTeam.r_count += 1;
+                });
+
+                const averages = currentTeams.map(t => t.members.length > 0 ? t.sum / t.members.length : 0);
+                const diff = Math.max(...averages) - Math.min(...averages);
+
+                if (diff < minAvgDiff) {
+                    minAvgDiff = diff;
+                    bestTeams = currentTeams.map(t => ({
+                        members: [...t.members],
+                        sum: t.sum,
+                        f_count: t.f_count,
+                        r_count: t.r_count
+                    }));
+                }
+                if (minAvgDiff <= 1.0) break;
+            }
+
+            // 3) 레인 배정 로직
+            const lanes = Array.from({ length: numLanes }, () => []);
+            const teamLaneMap = {};
+            for (let i = 0; i < numTeams; i++) teamLaneMap[i] = [];
+
+            const baseLanes = Math.floor(numLanes / numTeams);
+            const remainderLanes = numLanes % numTeams;
+            const lanesPerTeam = Array(numTeams).fill(baseLanes);
+            for (let i = 0; i < remainderLanes; i++) lanesPerTeam[i]++;
+
+            if (laneStrategy === 'cross') {
+                const laneCounts = [...lanesPerTeam];
+                for (let i = 0; i < numLanes; i++) {
+                    let tIdx = i % numTeams;
+                    if (laneCounts[tIdx] === 0) tIdx = laneCounts.findIndex(c => c > 0);
+                    teamLaneMap[tIdx].push(i);
+                    laneCounts[tIdx]--;
+                }
+            } else {
+                let curIdx = 0;
+                for (let tIdx = 0; tIdx < numTeams; tIdx++) {
+                    for (let k = 0; k < lanesPerTeam[tIdx]; k++) {
+                        teamLaneMap[tIdx].push(curIdx++);
+                    }
+                }
+            }
+
+            if (laneStrategy === 'cross' && numTeams === 2) {
+                teamLaneMap[1].reverse();
+            }
+
+            bestTeams.forEach((team, tIdx) => {
+                const players = shuffleArray(team.members.map(m => ({
+                    label: `[팀${tIdx + 1}] ${m.rawName}`,
+                    rawName: m.rawName,
+                    teamIdx: tIdx
+                })));
+                if (teamLaneMap[tIdx].length > 0) {
+                    players.forEach((p, i) => {
+                        const laneIdx = teamLaneMap[tIdx][i % teamLaneMap[tIdx].length];
+                        lanes[laneIdx].push(p);
+                    });
+                }
+            });
+
+            appState.currentResult = {
+                teams: bestTeams,
+                lanes,
+                excluded,
+                numTeams,
+                numLanes,
+                minAvgDiff
+            };
+
+            startAnimationStage();
+        }
+
+        /* =====================================================================
+         * 6. 안전한 Canvas DPI 설정 & 실시간 팀 보드
+         * ===================================================================== */
+        function setupCanvasDPI(canvas, logicalHeight) {
+            const wrapper = document.getElementById('stageCanvasWrapper');
+            const rect = wrapper ? wrapper.getBoundingClientRect() : { width: 720 };
+            const width = Math.max(320, Math.floor(rect.width || 720));
+            const height = Math.max(240, logicalHeight);
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+            canvas.width = Math.floor(width * dpr);
+            canvas.height = Math.floor(height * dpr);
+            canvas.style.height = height + 'px';
+
+            const ctx = canvas.getContext('2d');
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            return { ctx, width, height, dpr };
+        }
+
+        function createOffscreen(width, height, dpr) {
+            const off = document.createElement('canvas');
+            off.width = Math.floor(width * dpr);
+            off.height = Math.floor(height * dpr);
+            const octx = off.getContext('2d');
+            octx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            return { off, octx };
+        }
+
+        // 구형 브라우저 호환 둥근 사각형 헬퍼
+        function drawRoundRect(ctx, x, y, w, h, r) {
+            const rad = Math.min(r, w / 2, h / 2);
+            ctx.beginPath();
+            ctx.moveTo(x + rad, y);
+            ctx.lineTo(x + w - rad, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + rad);
+            ctx.lineTo(x + w, y + h - rad);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - rad, y + h);
+            ctx.lineTo(x + rad, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - rad);
+            ctx.lineTo(x, y + rad);
+            ctx.quadraticCurveTo(x, y, x + rad, y);
+            ctx.closePath();
+        }
+
+        function initLiveTeamsBoard(numTeams) {
+            appState.liveRevealedSet.clear();
+            appState.liveTeamStats = Array.from({ length: numTeams }, () => ({ count: 0, fCount: 0, sum: 0 }));
+
+            const board = document.getElementById('liveTeamsBoard');
+            board.innerHTML = '';
+            board.className = `teams-grid ${numTeams === 3 ? 'cols-3' : 'cols-2'}`;
+
+            for (let i = 0; i < numTeams; i++) {
+                const theme = TEAM_THEMES[i];
+                const col = document.createElement('div');
+                col.className = 'live-team-card';
+                col.style.borderColor = theme.softBorder;
+                col.innerHTML = `
+                    <div class="live-team-head">
+                        <span style="color:${theme.color}">${theme.emoji} ${theme.name}</span>
+                        <span id="liveTeamMeta-${i}" style="font-size:11px;padding:2px 8px;border-radius:999px;background:${theme.softBg};color:${theme.text};">0명 · 여성 0명</span>
+                    </div>
+                    <div id="liveTeamList-${i}" class="pill-wrap"></div>
+                    <div id="liveTeamAvg-${i}" class="live-team-foot">
+                        <span>현재 평균 에버</span>
+                        <strong style="color:#1e293b;">-</strong>
+                    </div>
+                `;
+                board.appendChild(col);
+            }
+        }
+
+        function addPlayerToLiveBoard(player, teamIdx) {
+            const key = `${teamIdx}:${player.rawName}`;
+            if (appState.liveRevealedSet.has(key)) return;
+            appState.liveRevealedSet.add(key);
+
+            const list = document.getElementById(`liveTeamList-${teamIdx}`);
+            const metaEl = document.getElementById(`liveTeamMeta-${teamIdx}`);
+            const avgEl = document.getElementById(`liveTeamAvg-${teamIdx}`);
+            if (!list) return;
+
+            const stat = appState.liveTeamStats[teamIdx];
+            stat.count += 1;
+            if (player.isFemale) stat.fCount += 1;
+            stat.sum += player.score;
+
+            const theme = TEAM_THEMES[teamIdx];
+            const pill = document.createElement('span');
+            pill.className = 'member-pill';
+            pill.style.background = theme.softBg;
+            pill.style.borderColor = theme.softBorder;
+            pill.style.color = theme.text;
+            pill.textContent = player.isFemale ? `${player.rawName} 🎀` : player.rawName;
+            list.appendChild(pill);
+
+            if (metaEl) metaEl.textContent = `${stat.count}명 · 여성 ${stat.fCount}명`;
+            if (avgEl) {
+                avgEl.innerHTML = `<span>현재 평균 에버</span><strong style="color:${theme.color};">${(stat.sum / stat.count).toFixed(2)}</strong>`;
+            }
+        }
+
+        function setTopBanner(player, teamIdx, extraTag = '') {
+            const banner = document.getElementById('stageTopBanner');
+            if (!player) {
+                banner.innerHTML = `<div class="banner-placeholder">🐻 당첨 순간 이곳에 참가자와 팀이 공개됩니다 (스포일러 없음!)</div>`;
+                return;
+            }
+            const theme = TEAM_THEMES[teamIdx];
+            banner.innerHTML = `
+                <div class="banner-reveal" style="border-color:${theme.color};">
+                    ${extraTag ? `<span style="font-size:12px;font-weight:800;padding:2px 8px;border-radius:6px;background:#fef3c7;color:#92400e;">${extraTag}</span>` : ''}
+                    <span style="font-size:12px;font-weight:800;padding:3px 10px;border-radius:999px;background:${theme.softBg};color:${theme.text};">${theme.emoji} ${theme.name}</span>
+                    <span style="font-size:18px;font-weight:900;color:#0f172a;">${player.rawName}</span>
+                    <span style="font-size:12px;font-weight:600;color:#64748b;">에버 ${player.score.toFixed(1)}</span>
+                </div>
+            `;
+        }
+
+        function startAnimationStage() {
+            stopStageLoop();
+            ConfettiEngine.stop();
+            appState.runId++;
+            const runId = appState.runId;
+            appState.isAnimating = true;
+            appState.ladderState = null;
+            appState.raceState = null;
+
+            const canvas = document.getElementById('stageCanvas');
+            const wrapper = document.getElementById('stageCanvasWrapper');
+            canvas.onclick = null;
+            canvas.onmousemove = null;
+            canvas.style.cursor = 'default';
+            wrapper.classList.remove('scrollable');
+
+            document.getElementById('stageCard').classList.remove('hidden');
+            document.getElementById('outputArea').classList.add('hidden');
+            document.getElementById('skipAnimBtn').classList.remove('hidden');
+            document.getElementById('ladderControls').classList.add('hidden');
+
+            setTopBanner(null);
+            initLiveTeamsBoard(appState.currentResult.numTeams);
+            document.getElementById('stageCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            if (appState.mode === 'race') {
+                document.getElementById('stageModeEmoji').textContent = '🏃';
+                document.getElementById('stageTitle').textContent = '깃발 뽑기 달리기';
+                document.getElementById('stageSubtitle').textContent = '결승선 비밀 깃발(?)을 뽑는 순간 팀 컬러가 공개됩니다!';
+                document.getElementById('stageTopBanner').classList.remove('hidden');
+                runRaceAnimation(runId);
+            } else if (appState.mode === 'ladder') {
+                document.getElementById('stageModeEmoji').textContent = '🪜';
+                document.getElementById('stageTitle').textContent = '스릴만점 사다리타기';
+                document.getElementById('stageSubtitle').textContent = '내려가는 동안은 비밀색! 바닥에 도착하는 순간 팀이 공개됩니다!';
+                document.getElementById('stageTopBanner').classList.add('hidden');
+                document.getElementById('ladderControls').classList.remove('hidden');
+                runLadderAnimation(runId);
+            } else if (appState.mode === 'lottery') {
+                document.getElementById('stageModeEmoji').textContent = '🎰';
+                document.getElementById('stageTitle').textContent = '운명의 볼링공 뽑기';
+                document.getElementById('stageSubtitle').textContent = '비밀 볼링공이 튀어나오는 순간 팀 색과 이름이 공개됩니다!';
+                document.getElementById('stageTopBanner').classList.remove('hidden');
+                runLotteryAnimation(runId);
+            } else {
+                document.getElementById('stageModeEmoji').textContent = '🎳';
+                document.getElementById('stageTitle').textContent = '스트라이크 핀 추첨';
+                document.getElementById('stageSubtitle').textContent = '핀을 부수는 순간 팀 컬러와 함께 참가자가 공개됩니다!';
+                document.getElementById('stageTopBanner').classList.remove('hidden');
+                runStrikeAnimation(runId);
+            }
+        }
+
+        function skipAnimation() {
+            stopStageLoop();
+            appState.runId++;
+            appState.isAnimating = false;
+
+            if (appState.mode === 'race' && appState.raceState) {
+                const st = appState.raceState;
+                st.countdownDone = true;
+                st.goBannerTimer = 0;
+                st.runners.forEach((r, idx) => {
+                    r.progress = 1;
+                    r.x = st.finishX;
+                    r.finished = true;
+                    r.flagUnfurl = 1;
+                    if (!r.finishOrder) r.finishOrder = idx + 1;
+                });
+                drawRaceFrame(st, 0);
+            } else if (appState.mode === 'ladder' && appState.ladderState) {
+                const st = appState.ladderState;
+                st.focusedCol = -1;
+                st.paths.forEach(p => {
+                    p.started = true;
+                    p.progress = 1;
+                    p.finished = true;
+                });
+                drawLadderDynamicFrame(st, 0);
+            }
+
+            if (appState.currentResult) {
+                appState.currentResult.teams.forEach((team, tIdx) => {
+                    team.members.forEach(m => addPlayerToLiveBoard(m, tIdx));
+                });
+            }
+            finishAnimationAndRevealResults(true);
+        }
+
+        function finishAnimationAndRevealResults(wasSkipped = false) {
+            appState.isAnimating = false;
+            document.getElementById('skipAnimBtn').classList.add('hidden');
+            document.getElementById('stageProgressBadge').textContent = '추첨 완료! 🎉';
+            renderFinalResults();
+            if (!wasSkipped) {
+                SoundFX.playFanfare();
+                ConfettiEngine.burst();
+            } else {
+                SoundFX.playRevealChime(5);
+            }
+        }
+
+        /* =====================================================================
+         * 7. 모드 1: 🏃 깃발 뽑기 달리기 (ZERO SPOILER)
+         * ===================================================================== */
+        function buildRaceStaticCache(st) {
+            const { width, height, dpr, runners, laneH, topPad, botPad, startX, finishX } = st;
+            const N = runners.length;
+            const { off, octx } = createOffscreen(width, height, dpr);
+
+            octx.fillStyle = '#15803d';
+            octx.fillRect(0, 0, width, height);
+
+            octx.fillStyle = '#166534';
+            for (let sx = 0; sx < width; sx += 44) {
+                octx.fillRect(sx, 0, 22, topPad);
+                octx.fillRect(sx, height - botPad, 22, botPad);
+            }
+
+            octx.fillStyle = 'rgba(15, 23, 42, 0.78)';
+            octx.fillRect(0, 0, width, topPad - 6);
+            octx.fillStyle = '#f8fafc';
+            octx.font = '800 12px sans-serif';
+            octx.textAlign = 'left';
+            octx.textBaseline = 'middle';
+            octx.fillText('🐻 곰탱이B.C · 깃발 뽑기 스프린트 🏁', 14, (topPad - 6) / 2);
+
+            const trackTop = topPad;
+            const trackHeight = N * laneH;
+
+            for (let i = 0; i < N; i++) {
+                const ly = trackTop + i * laneH;
+                octx.fillStyle = i % 2 === 0 ? '#9a3412' : '#7c2d12';
+                octx.fillRect(0, ly, width, laneH);
+                if (i > 0) {
+                    octx.strokeStyle = 'rgba(255,255,255,0.28)';
+                    octx.lineWidth = 1.2;
+                    octx.setLineDash([8, 6]);
+                    octx.beginPath();
+                    octx.moveTo(0, ly);
+                    octx.lineTo(width, ly);
+                    octx.stroke();
+                }
+                octx.setLineDash([]);
+                octx.fillStyle = 'rgba(255,255,255,0.24)';
+                octx.font = '900 12px sans-serif';
+                octx.textAlign = 'center';
+                octx.fillText(String(i + 1), 16, ly + laneH / 2);
+            }
+
+            octx.strokeStyle = '#ffffff';
+            octx.lineWidth = 2.5;
+            octx.beginPath();
+            octx.moveTo(0, trackTop);
+            octx.lineTo(width, trackTop);
+            octx.moveTo(0, trackTop + trackHeight);
+            octx.lineTo(width, trackTop + trackHeight);
+            octx.stroke();
+
+            // 출발선
+            octx.strokeStyle = 'rgba(255,255,255,0.85)';
+            octx.lineWidth = 3;
+            octx.beginPath();
+            octx.moveTo(startX, trackTop);
+            octx.lineTo(startX, trackTop + trackHeight);
+            octx.stroke();
+
+            // 체크무늬 결승선
+            const checkSize = 7;
+            const rows = Math.ceil(trackHeight / checkSize);
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < 2; c++) {
+                    const cy = trackTop + r * checkSize;
+                    const ch = Math.min(checkSize, trackTop + trackHeight - cy);
+                    octx.fillStyle = (r + c) % 2 === 0 ? '#ffffff' : '#0f172a';
+                    octx.fillRect(finishX - checkSize + c * checkSize, cy, checkSize, ch);
+                }
+            }
+
+            octx.fillStyle = '#14532d';
+            octx.fillRect(finishX + checkSize, trackTop, width - (finishX + checkSize), trackHeight);
+            st.staticCache = off;
+        }
+
+        function createRunnerPaceProfile() {
+            const segments = [];
+            for (let i = 0; i < 4; i++) {
+                const roll = Math.random();
+                let mult = 0.85 + Math.random() * 0.4;
+                let event = null;
+                if (roll < 0.26) { mult = 1.48 + Math.random() * 0.35; event = 'boost'; }
+                else if (roll > 0.80) { mult = 0.56 + Math.random() * 0.16; event = 'stumble'; }
+                segments.push({ mult, event });
+            }
+            const avg = segments.reduce((a, s) => a + s.mult, 0) / segments.length;
+            const factor = 0.82 + Math.random() * 0.38;
+            segments.forEach(s => { s.mult = (s.mult / avg) * factor; });
+            return segments;
+        }
+
+        function runRaceAnimation(runId) {
+            const canvas = document.getElementById('stageCanvas');
+            const wrapper = document.getElementById('stageCanvasWrapper');
+            const progressBadge = document.getElementById('stageProgressBadge');
+            const { teams } = appState.currentResult;
+
+            let allPlayers = [];
+            teams.forEach((team, tIdx) => {
+                team.members.forEach(member => allPlayers.push({ member, teamIdx: tIdx }));
+            });
+            allPlayers = shuffleArray(allPlayers);
+
+            const N = allPlayers.length;
+            const laneH = N > 16 ? 38 : N > 12 ? 40 : 44;
+            const topPad = 42;
+            const botPad = 24;
+            const logicalHeight = topPad + N * laneH + botPad;
+            if (N > 16) wrapper.classList.add('scrollable');
+
+            const { ctx, width, height, dpr } = setupCanvasDPI(canvas, logicalHeight);
+            const startX = Math.max(46, Math.min(72, width * 0.11));
+            const finishX = Math.max(startX + 140, width - Math.max(82, Math.min(118, width * 0.19)));
+
+            const runners = allPlayers.map((item, idx) => ({
+                member: item.member,
+                teamIdx: item.teamIdx,
+                progress: 0,
+                x: startX,
+                y: topPad + idx * laneH + laneH / 2,
+                stridePhase: Math.random() * Math.PI * 2,
+                segments: createRunnerPaceProfile(),
+                lastSegIdx: -1,
+                currentEvent: null,
+                finished: false,
+                finishOrder: 0,
+                flagUnfurl: 0,
+                cheerPhase: 0
+            }));
+
+            const st = {
+                runId, canvas, ctx, width, height, dpr, laneH, topPad, botPad, startX, finishX,
+                runners, staticCache: null, bursts: [],
+                countdownTimer: 0, countdownStage: -1, countdownDone: false, goBannerTimer: 0
+            };
+
+            buildRaceStaticCache(st);
+            appState.raceState = st;
+
+            let finishedCount = 0;
+            let completionTriggered = false;
+            const baseRaceSec = 6.0;
+            let lastTime = performance.now();
+            progressBadge.textContent = `출발 준비! (0 / ${N})`;
+
+            function loop(now) {
+                if (runId !== appState.runId || appState.raceState !== st) return;
+                const dt = Math.min((now - lastTime) / 1000, 0.05);
+                lastTime = now;
+                const scaledDt = dt * appState.speed;
+
+                if (!st.countdownDone) {
+                    st.countdownTimer += scaledDt;
+                    if (st.countdownTimer < 0.6) {
+                        if (st.countdownStage !== 0) { st.countdownStage = 0; SoundFX.playCountdownBeep(false); }
+                    } else if (st.countdownTimer < 1.2) {
+                        if (st.countdownStage !== 1) { st.countdownStage = 1; SoundFX.playCountdownBeep(false); }
+                    } else {
+                        st.countdownStage = 2;
+                        st.countdownDone = true;
+                        st.goBannerTimer = 0.55;
+                        SoundFX.playCountdownBeep(true);
+                        progressBadge.textContent = `전원 출발! (0 / ${N})`;
+                    }
+                } else {
+                    if (st.goBannerTimer > 0) st.goBannerTimer = Math.max(0, st.goBannerTimer - dt);
+                    let allDone = true;
+                    for (let i = 0; i < N; i++) {
+                        const r = st.runners[i];
+                        if (!r.finished) {
+                            allDone = false;
+                            const segIdx = Math.min(3, Math.floor(r.progress * 4));
+                            const seg = r.segments[segIdx];
+                            r.currentEvent = seg.event;
+                            if (segIdx !== r.lastSegIdx) {
+                                r.lastSegIdx = segIdx;
+                                if (seg.event === 'boost') SoundFX.playBoost();
+                            }
+                            r.progress += (scaledDt / baseRaceSec) * seg.mult;
+                            r.stridePhase += dt * (11 + seg.mult * 8);
+                            if (r.progress >= 1) {
+                                r.progress = 1;
+                                r.finished = true;
+                                r.currentEvent = null;
+                                finishedCount++;
+                                r.finishOrder = finishedCount;
+                                const theme = TEAM_THEMES[r.teamIdx];
+                                st.bursts.push({ x: st.finishX + 26, y: r.y - 4, color: theme.color, t: 0, dur: 0.45 });
+                                SoundFX.playRevealChime(finishedCount);
+                                const medal = finishedCount === 1 ? '🥇 1등 도착!' : finishedCount === 2 ? '🥈 2등 도착!' : finishedCount === 3 ? '🥉 3등 도착!' : `${finishedCount}등 도착! 🚩`;
+                                setTopBanner(r.member, r.teamIdx, medal);
+                                addPlayerToLiveBoard(r.member, r.teamIdx);
+                                progressBadge.textContent = `깃발 뽑기 (${finishedCount} / ${N})`;
+                            }
+                            r.x = st.startX + (st.finishX - st.startX) * r.progress;
+                        } else {
+                            r.x = st.finishX;
+                            r.flagUnfurl = Math.min(1, r.flagUnfurl + dt * 5);
+                            r.cheerPhase += dt * 9;
+                        }
+                    }
+                    if (allDone && !completionTriggered) {
+                        completionTriggered = true;
+                        if (appState.isAnimating) finishAnimationAndRevealResults(false);
+                    }
+                }
+
+                drawRaceFrame(st, dt);
+                const allUnfurled = completionTriggered && st.runners.every(r => r.flagUnfurl >= 1);
+                if (!allUnfurled || st.bursts.length > 0) {
+                    appState.rafId = requestAnimationFrame(loop);
+                } else {
+                    stopStageLoop();
+                }
+            }
+            appState.rafId = requestAnimationFrame(loop);
+        }
+
+        function drawRaceFrame(st, dt = 0) {
+            const { ctx, width, height, staticCache, runners, finishX, bursts } = st;
+            ctx.drawImage(staticCache, 0, 0, width, height);
+
+            const flagBaseX = finishX + 24;
+            for (let i = 0; i < runners.length; i++) {
+                const r = runners[i];
+                const ly = r.y;
+                const theme = TEAM_THEMES[r.teamIdx];
+
+                // 깃발
+                ctx.save();
+                ctx.strokeStyle = '#e2e8f0';
+                ctx.lineWidth = 2.4;
+                ctx.beginPath();
+                ctx.moveTo(flagBaseX, ly + 13);
+                ctx.lineTo(flagBaseX, ly - 13);
+                ctx.stroke();
+
+                if (!r.finished) {
+                    ctx.fillStyle = '#334155';
+                    ctx.strokeStyle = '#f59e0b';
+                    ctx.lineWidth = 1.4;
+                    drawRoundRect(ctx, flagBaseX + 1, ly - 12, 24, 16, 4);
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.fillStyle = '#fef3c7';
+                    ctx.font = '900 11px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('?', flagBaseX + 13, ly - 3.5);
+                } else {
+                    const curW = Math.max(12, 46 * r.flagUnfurl);
+                    const waveY = Math.sin(r.cheerPhase) * 1.4;
+                    ctx.fillStyle = theme.color;
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 1.5;
+                    drawRoundRect(ctx, flagBaseX + 1, ly - 13 + waveY, curW, 20, 5);
+                    ctx.fill();
+                    ctx.stroke();
+                    if (r.flagUnfurl > 0.5) {
+                        ctx.fillStyle = '#ffffff';
+                        ctx.font = '900 11px sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(`팀${r.teamIdx + 1}`, flagBaseX + 1 + curW / 2, ly - 3 + waveY);
+                    }
+                }
+                ctx.restore();
+
+                // 러너
+                ctx.save();
+                const rx = r.x;
+                const bounce = r.finished ? Math.abs(Math.sin(r.cheerPhase)) * 3.2 : Math.abs(Math.sin(r.stridePhase)) * 2.6;
+                const ry = ly - bounce;
+
+                ctx.fillStyle = 'rgba(0,0,0,0.25)';
+                ctx.beginPath();
+                ctx.ellipse(rx, ly + 11, 7.5, 2.5, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                const legSwing = r.finished ? 0 : Math.sin(r.stridePhase) * 6;
+                ctx.strokeStyle = '#1e293b';
+                ctx.lineWidth = 2.4;
+                ctx.beginPath();
+                ctx.moveTo(rx - 1, ry + 3);
+                ctx.lineTo(rx - 2 - legSwing, ry + 10);
+                ctx.moveTo(rx + 1, ry + 3);
+                ctx.lineTo(rx + 2 + legSwing, ry + 10);
+                ctx.stroke();
+
+                ctx.fillStyle = r.finished ? theme.color : '#f8fafc';
+                ctx.strokeStyle = r.finished ? '#ffffff' : '#334155';
+                ctx.lineWidth = 1.4;
+                drawRoundRect(ctx, rx - 5, ry - 4, 10, 9, 3);
+                ctx.fill();
+                ctx.stroke();
+
+                // 곰돌이 귀 + 얼굴
+                ctx.fillStyle = '#92400e';
+                ctx.beginPath();
+                ctx.arc(rx - 4, ry - 12, 2.4, 0, Math.PI * 2);
+                ctx.arc(rx + 4, ry - 12, 2.4, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#fef3c7';
+                ctx.beginPath();
+                ctx.arc(rx, ry - 8.5, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (!r.finished && r.currentEvent === 'boost') {
+                    ctx.font = '900 10px sans-serif';
+                    ctx.fillStyle = '#fde047';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('⚡', rx, ry - 16);
+                } else if (!r.finished && r.currentEvent === 'stumble') {
+                    ctx.font = '900 10px sans-serif';
+                    ctx.fillStyle = '#38bdf8';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('💦', rx, ry - 16);
+                }
+
+                // 이름표
+                const name = r.member.rawName.length > 5 ? r.member.rawName.slice(0, 5) : r.member.rawName;
+                const medal = r.finished && r.finishOrder === 1 ? '🥇' : r.finished && r.finishOrder === 2 ? '🥈' : r.finished && r.finishOrder === 3 ? '🥉' : '';
+                const label = medal + name;
+                ctx.font = '800 10.5px sans-serif';
+                const tagW = ctx.measureText(label).width + 12;
+                const tagX = r.x < st.startX + tagW + 14 ? r.x + 12 : r.x - 12 - tagW;
+                ctx.fillStyle = r.finished ? theme.color : 'rgba(255,255,255,0.94)';
+                drawRoundRect(ctx, tagX, ly - 9, tagW, 18, 9);
+                ctx.fill();
+                ctx.fillStyle = r.finished ? '#ffffff' : '#0f172a';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(label, tagX + tagW / 2, ly + 0.5);
+                ctx.restore();
+            }
+
+            // 도착 링 버스트
+            for (let i = bursts.length - 1; i >= 0; i--) {
+                const b = bursts[i];
+                b.t += dt;
+                const ratio = b.t / b.dur;
+                if (ratio >= 1) { bursts.splice(i, 1); continue; }
+                ctx.save();
+                ctx.globalAlpha = 1 - ratio;
+                ctx.strokeStyle = b.color;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, 8 + ratio * 24, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            if (!st.countdownDone || st.goBannerTimer > 0) {
+                const text = !st.countdownDone ? (st.countdownStage === 0 ? 'READY...' : 'SET...') : 'GO! 🔫';
+                ctx.save();
+                ctx.font = 'italic 900 42px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.lineWidth = 6;
+                ctx.strokeStyle = 'rgba(15,23,42,0.88)';
+                ctx.strokeText(text, width / 2, height / 2);
+                ctx.fillStyle = !st.countdownDone ? '#fde047' : '#4ade80';
+                ctx.fillText(text, width / 2, height / 2);
+                ctx.restore();
+            }
+        }
+
+        /* =====================================================================
+         * 8. 모드 2: 🪜 스릴만점 사다리타기 (ZERO SPOILER + 100% 정확한 경로)
+         * ===================================================================== */
+        function buildExactLadder(topPlayers, bottomSlots) {
+            const N = topPlayers.length;
+            const currentGoals = topPlayers.map(p => bottomSlots.findIndex(slot => slot.member === p.member));
+            const rawSwaps = [];
+
+            const noiseCount = Math.min(N, 10);
+            for (let k = 0; k < noiseCount; k++) {
+                const col = Math.floor(Math.random() * (N - 1));
+                [currentGoals[col], currentGoals[col + 1]] = [currentGoals[col + 1], currentGoals[col]];
+                rawSwaps.push(col);
+            }
+
+            let sorted = false;
+            let dir = 1;
+            while (!sorted) {
+                sorted = true;
+                if (dir === 1) {
+                    for (let c = 0; c < N - 1; c++) {
+                        if (currentGoals[c] > currentGoals[c + 1]) {
+                            [currentGoals[c], currentGoals[c + 1]] = [currentGoals[c + 1], currentGoals[c]];
+                            rawSwaps.push(c);
+                            sorted = false;
+                        }
+                    }
+                } else {
+                    for (let c = N - 2; c >= 0; c--) {
+                        if (currentGoals[c] > currentGoals[c + 1]) {
+                            [currentGoals[c], currentGoals[c + 1]] = [currentGoals[c + 1], currentGoals[c]];
+                            rawSwaps.push(c);
+                            sorted = false;
+                        }
+                    }
+                }
+                dir *= -1;
+            }
+
+            const lastRow = new Array(N).fill(-1);
+            const rungs = [];
+            let maxRow = 0;
+            rawSwaps.forEach(c => {
+                const row = Math.max(lastRow[c], lastRow[c + 1]) + 1;
+                lastRow[c] = row;
+                lastRow[c + 1] = row;
+                rungs.push({ col: c, row });
+                if (row > maxRow) maxRow = row;
+            });
+            return { rungs, totalRows: maxRow + 1 };
+        }
+
+        function computeLadderPath(startCol, rungs, getX, getY, topY, bottomY) {
+            const points = [{ x: getX(startCol), y: topY }];
+            let col = startCol;
+            const sortedRungs = [...rungs].sort((a, b) => a.row - b.row);
+            for (const rung of sortedRungs) {
+                const ry = getY(rung.row);
+                if (rung.col === col) {
+                    points.push({ x: getX(col), y: ry });
+                    col = col + 1;
+                    points.push({ x: getX(col), y: ry });
+                } else if (rung.col + 1 === col) {
+                    points.push({ x: getX(col), y: ry });
+                    col = col - 1;
+                    points.push({ x: getX(col), y: ry });
+                }
+            }
+            points.push({ x: getX(col), y: bottomY });
+
+            let totalLen = 0;
+            const segLens = [];
+            for (let i = 0; i < points.length - 1; i++) {
+                const len = Math.hypot(points[i + 1].x - points[i].x, points[i + 1].y - points[i].y);
+                segLens.push(len);
+                totalLen += len;
+            }
+            return { points, segLens, totalLen, endCol: col };
+        }
+
+        function buildLadderStaticCache(st) {
+            const { width, height, dpr, topPlayers, bottomSlots, rungs, getX, getY, topY, bottomY, padX } = st;
+            const N = topPlayers.length;
+            const { off, octx } = createOffscreen(width, height, dpr);
+
+            const grad = octx.createLinearGradient(0, 0, 0, height);
+            grad.addColorStop(0, '#0f172a');
+            grad.addColorStop(1, '#1e293b');
+            octx.fillStyle = grad;
+            octx.fillRect(0, 0, width, height);
+
+            octx.lineCap = 'round';
+            octx.strokeStyle = 'rgba(148,163,184,0.32)';
+            octx.lineWidth = 3;
+            for (let i = 0; i < N; i++) {
+                octx.beginPath();
+                octx.moveTo(getX(i), topY);
+                octx.lineTo(getX(i), bottomY);
+                octx.stroke();
+            }
+
+            octx.strokeStyle = 'rgba(148,163,184,0.45)';
+            for (let i = 0; i < rungs.length; i++) {
+                const r = rungs[i];
+                const y = getY(r.row);
+                octx.beginPath();
+                octx.moveTo(getX(r.col), y);
+                octx.lineTo(getX(r.col + 1), y);
+                octx.stroke();
+            }
+
+            const boxW = Math.max(26, Math.min(54, (width - padX) / N - 4));
+            const boxH = 26;
+            octx.textAlign = 'center';
+            octx.textBaseline = 'middle';
+            octx.font = `800 ${N > 14 ? 9 : 11}px sans-serif`;
+
+            for (let i = 0; i < N; i++) {
+                const x = getX(i);
+                const slot = bottomSlots[i];
+                const theme = TEAM_THEMES[slot.teamIdx];
+                octx.fillStyle = 'rgba(15,23,42,0.92)';
+                octx.strokeStyle = theme.color;
+                octx.lineWidth = 1.8;
+                drawRoundRect(octx, x - boxW / 2, bottomY + 12, boxW, boxH, 7);
+                octx.fill();
+                octx.stroke();
+                octx.fillStyle = theme.color;
+                octx.fillText(`팀${slot.teamIdx + 1}`, x, bottomY + 25);
+            }
+            st.staticCache = off;
+            st.boxW = boxW;
+            st.boxH = boxH;
+        }
+
+        function runLadderAnimation(runId) {
+            const canvas = document.getElementById('stageCanvas');
+            const { teams } = appState.currentResult;
+
+            let allSlots = [];
+            teams.forEach((team, tIdx) => {
+                team.members.forEach(member => allSlots.push({ member, teamIdx: tIdx }));
+            });
+            const bottomSlots = shuffleArray(allSlots);
+            const topPlayers = shuffleArray(allSlots);
+            const N = topPlayers.length;
+            const { rungs, totalRows } = buildExactLadder(topPlayers, bottomSlots);
+
+            const logicalHeight = Math.max(380, Math.min(480, 260 + totalRows * 8));
+            const { ctx, width, height, dpr } = setupCanvasDPI(canvas, logicalHeight);
+            const padX = Math.max(28, Math.min(52, width / (N * 1.7)));
+            const topY = 66;
+            const bottomY = height - 56;
+            const usableW = width - padX * 2;
+            const usableH = bottomY - topY;
+            const getX = (col) => N === 1 ? width / 2 : padX + (col / (N - 1)) * usableW;
+            const getY = (row) => topY + ((row + 0.8) / (totalRows + 0.6)) * usableH;
+
+            const paths = topPlayers.map((item, idx) => ({
+                ...computeLadderPath(idx, rungs, getX, getY, topY, bottomY),
+                item, progress: 0, delaySec: 0, started: false, finished: false
+            }));
+
+            const st = {
+                runId, canvas, ctx, width, height, dpr, padX, topPlayers, bottomSlots,
+                rungs, totalRows, paths, getX, getY, topY, bottomY,
+                staticCache: null, boxW: 36, boxH: 26, focusedCol: -1, bursts: []
+            };
+            buildLadderStaticCache(st);
+            appState.ladderState = st;
+
+            canvas.onmousemove = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                canvas.style.cursor = (e.clientY - rect.top) <= topY + 14 ? 'pointer' : 'default';
+            };
+            canvas.onclick = (e) => {
+                if (appState.ladderState !== st) return;
+                const rect = canvas.getBoundingClientRect();
+                const cx = e.clientX - rect.left;
+                const cy = e.clientY - rect.top;
+                if (cy <= topY + 20) {
+                    let closest = 0;
+                    let minDist = Infinity;
+                    for (let i = 0; i < N; i++) {
+                        const d = Math.abs(cx - st.getX(i));
+                        if (d < minDist) { minDist = d; closest = i; }
+                    }
+                    if (minDist < 42) ladderTraceSingle(closest);
+                }
+            };
+
+            ladderRunAll();
+        }
+
+        function drawLadderDynamicFrame(st, dt = 0) {
+            const { ctx, width, height, staticCache, paths, getX, topY, bottomY, boxW, boxH, focusedCol, bursts } = st;
+            const N = paths.length;
+            ctx.drawImage(staticCache, 0, 0, width, height);
+
+            for (let idx = 0; idx < N; idx++) {
+                const p = paths[idx];
+                if (!p.started && p.progress <= 0) continue;
+                const isFocused = focusedCol === -1 || focusedCol === idx;
+                const theme = TEAM_THEMES[p.item.teamIdx];
+                const strokeColor = p.finished ? theme.color : (isFocused ? MYSTERY.path : MYSTERY.pathDim);
+                const targetDist = p.totalLen * Math.min(1, p.progress);
+
+                ctx.save();
+                ctx.strokeStyle = strokeColor;
+                ctx.globalAlpha = isFocused ? 0.94 : 0.18;
+                ctx.lineWidth = isFocused ? (p.finished ? 4.2 : 3.6) : 2;
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(p.points[0].x, p.points[0].y);
+
+                let acc = 0;
+                let hx = p.points[0].x;
+                let hy = p.points[0].y;
+                for (let s = 0; s < p.segLens.length; s++) {
+                    const segLen = p.segLens[s];
+                    if (acc + segLen <= targetDist) {
+                        ctx.lineTo(p.points[s + 1].x, p.points[s + 1].y);
+                        acc += segLen;
+                        hx = p.points[s + 1].x;
+                        hy = p.points[s + 1].y;
+                    } else {
+                        const ratio = segLen > 0 ? (targetDist - acc) / segLen : 0;
+                        hx = p.points[s].x + (p.points[s + 1].x - p.points[s].x) * ratio;
+                        hy = p.points[s].y + (p.points[s + 1].y - p.points[s].y) * ratio;
+                        ctx.lineTo(hx, hy);
+                        break;
+                    }
+                }
+                ctx.stroke();
+
+                if (p.progress > 0 && p.progress < 1) {
+                    ctx.fillStyle = MYSTERY.headFill;
+                    ctx.strokeStyle = MYSTERY.headStroke;
+                    ctx.lineWidth = 2.2;
+                    ctx.beginPath();
+                    ctx.arc(hx, hy, isFocused ? 6 : 4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+                }
+
+                if (p.finished) {
+                    const ex = getX(p.endCol);
+                    ctx.fillStyle = theme.color;
+                    drawRoundRect(ctx, ex - boxW / 2, bottomY + 12, boxW, boxH, 7);
+                    ctx.fill();
+                    ctx.font = `800 ${N > 14 ? 9 : 11}px sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillText(`팀${p.item.teamIdx + 1}`, ex, bottomY + 25);
+                }
+                ctx.restore();
+            }
+
+            // 상단 이름표 (도착 전 중립 -> 도착 후 팀 색)
+            const pillW = Math.max(30, Math.min(58, (width - st.padX) / N - 3));
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.font = `700 ${N > 14 ? 9.5 : 11}px sans-serif`;
+
+            for (let i = 0; i < N; i++) {
+                const p = paths[i];
+                const x = getX(i);
+                const shortName = p.item.member.rawName.length > 4 ? p.item.member.rawName.slice(0, 4) : p.item.member.rawName;
+                const labelY = N > 10 ? (i % 2 === 0 ? 18 : 40) : 26;
+
+                ctx.save();
+                ctx.fillStyle = p.finished ? TEAM_THEMES[p.item.teamIdx].color : (p.started ? MYSTERY.path : '#64748b');
+                ctx.beginPath();
+                ctx.arc(x, topY - 6, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = p.finished ? TEAM_THEMES[p.item.teamIdx].color : MYSTERY.tagBg;
+                ctx.strokeStyle = p.finished ? '#ffffff' : (p.started ? MYSTERY.path : MYSTERY.tagBorder);
+                ctx.lineWidth = 1.4;
+                drawRoundRect(ctx, x - pillW / 2, labelY - 10, pillW, 20, 6);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = p.finished ? '#ffffff' : MYSTERY.tagText;
+                ctx.fillText(shortName, x, labelY + 0.5);
+                ctx.restore();
+            }
+
+            for (let i = bursts.length - 1; i >= 0; i--) {
+                const b = bursts[i];
+                b.t += dt;
+                const ratio = b.t / b.dur;
+                if (ratio >= 1) { bursts.splice(i, 1); continue; }
+                ctx.save();
+                ctx.globalAlpha = 1 - ratio;
+                ctx.strokeStyle = b.color;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, 10 + ratio * 24, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+            }
+        }
+
+        function ladderRunAll() {
+            const st = appState.ladderState;
+            if (!st) return;
+            stopStageLoop();
+            st.focusedCol = -1;
+            st.bursts = [];
+            const N = st.paths.length;
+            st.paths.forEach((p, idx) => {
+                p.progress = 0; p.started = false; p.finished = false; p.delaySec = idx * 0.08;
+            });
+
+            let elapsedScaled = 0;
+            let finishedCount = 0;
+            let completionTriggered = false;
+            let lastTime = performance.now();
+            const progressBadge = document.getElementById('stageProgressBadge');
+
+            function loop(now) {
+                if (appState.ladderState !== st) return;
+                const dt = Math.min((now - lastTime) / 1000, 0.05);
+                lastTime = now;
+                const scaledDt = dt * appState.speed;
+                elapsedScaled += scaledDt;
+                let allDone = true;
+
+                for (let i = 0; i < N; i++) {
+                    const p = st.paths[i];
+                    if (!p.finished) {
+                        allDone = false;
+                        if (!p.started && elapsedScaled >= p.delaySec) {
+                            p.started = true;
+                            SoundFX.playTick(500 + (i % 6) * 35, 0.03);
+                        }
+                        if (p.started) {
+                            p.progress += scaledDt / 4.0;
+                            if (p.progress >= 1) {
+                                p.progress = 1;
+                                p.finished = true;
+                                finishedCount++;
+                                st.bursts.push({ x: st.getX(p.endCol), y: st.bottomY + 24, color: TEAM_THEMES[p.item.teamIdx].color, t: 0, dur: 0.45 });
+                                SoundFX.playRevealChime(finishedCount);
+                                addPlayerToLiveBoard(p.item.member, p.item.teamIdx);
+                                progressBadge.textContent = `사다리 도착 (${finishedCount} / ${N})`;
+                            }
+                        }
+                    }
+                }
+
+                drawLadderDynamicFrame(st, dt);
+                if (allDone && !completionTriggered) {
+                    completionTriggered = true;
+                    if (appState.isAnimating) finishAnimationAndRevealResults(false);
+                }
+                if (!allDone || st.bursts.length > 0) appState.rafId = requestAnimationFrame(loop);
+                else stopStageLoop();
+            }
+            progressBadge.textContent = `전원 동시 출발! (0 / ${N})`;
+            appState.rafId = requestAnimationFrame(loop);
+        }
+
+        function ladderRunSequential() {
+            const st = appState.ladderState;
+            if (!st) return;
+            stopStageLoop();
+            st.bursts = [];
+            const N = st.paths.length;
+            st.paths.forEach(p => { p.progress = 0; p.started = false; p.finished = false; });
+
+            let currentIdx = 0;
+            let completionTriggered = false;
+            let lastTime = performance.now();
+            const progressBadge = document.getElementById('stageProgressBadge');
+
+            function loop(now) {
+                if (appState.ladderState !== st) return;
+                const dt = Math.min((now - lastTime) / 1000, 0.05);
+                lastTime = now;
+
+                if (currentIdx < N) {
+                    const p = st.paths[currentIdx];
+                    st.focusedCol = currentIdx;
+                    if (!p.started) { p.started = true; SoundFX.playTick(600, 0.04); }
+                    p.progress += (dt * appState.speed) / 1.05;
+                    if (p.progress >= 1) {
+                        p.progress = 1;
+                        p.finished = true;
+                        st.bursts.push({ x: st.getX(p.endCol), y: st.bottomY + 24, color: TEAM_THEMES[p.item.teamIdx].color, t: 0, dur: 0.45 });
+                        SoundFX.playRevealChime(currentIdx);
+                        addPlayerToLiveBoard(p.item.member, p.item.teamIdx);
+                        progressBadge.textContent = `순차 추적 (${currentIdx + 1} / ${N})`;
+                        currentIdx++;
+                        if (currentIdx >= N) st.focusedCol = -1;
+                    }
+                }
+                drawLadderDynamicFrame(st, dt);
+                if (currentIdx >= N && !completionTriggered) {
+                    completionTriggered = true;
+                    if (appState.isAnimating) finishAnimationAndRevealResults(false);
+                }
+                if (currentIdx < N || st.bursts.length > 0) appState.rafId = requestAnimationFrame(loop);
+                else stopStageLoop();
+            }
+            appState.rafId = requestAnimationFrame(loop);
+        }
+
+        function ladderTraceSingle(colIdx) {
+            const st = appState.ladderState;
+            if (!st) return;
+            stopStageLoop();
+            st.focusedCol = colIdx;
+            const p = st.paths[colIdx];
+            p.progress = 0; p.started = true; p.finished = false;
+            SoundFX.playTick(660, 0.045);
+
+            let landed = false;
+            let lastTime = performance.now();
+            function loop(now) {
+                if (appState.ladderState !== st || st.focusedCol !== colIdx) return;
+                const dt = Math.min((now - lastTime) / 1000, 0.05);
+                lastTime = now;
+                if (!landed) {
+                    p.progress += (dt * appState.speed) / 1.1;
+                    if (p.progress >= 1) {
+                        p.progress = 1; p.finished = true; landed = true;
+                        st.bursts.push({ x: st.getX(p.endCol), y: st.bottomY + 24, color: TEAM_THEMES[p.item.teamIdx].color, t: 0, dur: 0.45 });
+                        SoundFX.playRevealChime(colIdx);
+                        addPlayerToLiveBoard(p.item.member, p.item.teamIdx);
+                        const done = st.paths.filter(x => x.finished).length;
+                        document.getElementById('stageProgressBadge').textContent = `개별 확인 (${done} / ${st.paths.length})`;
+                        if (appState.isAnimating && done === st.paths.length) finishAnimationAndRevealResults(false);
+                    }
+                }
+                drawLadderDynamicFrame(st, dt);
+                if (!landed || st.bursts.length > 0) appState.rafId = requestAnimationFrame(loop);
+                else stopStageLoop();
+            }
+            appState.rafId = requestAnimationFrame(loop);
+        }
+
+        /* =====================================================================
+         * 9. 모드 3: 🎰 운명의 볼링공 뽑기 (ZERO SPOILER)
+         * ===================================================================== */
+        function runLotteryAnimation(runId) {
+            const canvas = document.getElementById('stageCanvas');
+            const progressBadge = document.getElementById('stageProgressBadge');
+            const { teams } = appState.currentResult;
+
+            let revealQueue = [];
+            teams.forEach((team, tIdx) => {
+                team.members.forEach(member => revealQueue.push({ member, teamIdx: tIdx }));
+            });
+            revealQueue = shuffleArray(revealQueue);
+
+            const { ctx, width, height, dpr } = setupCanvasDPI(canvas, 290);
+            const cx = width / 2;
+            const cy = height / 2 + 6;
+            const drumR = Math.min(width * 0.32, 108);
+
+            const { off: bgCanvas, octx } = createOffscreen(width, height, dpr);
+            octx.fillStyle = '#0f172a';
+            octx.fillRect(0, 0, width, height);
+            octx.fillStyle = '#334155';
+            drawRoundRect(octx, cx - drumR * 0.6, cy + drumR - 6, drumR * 1.2, 20, 10);
+            octx.fill();
+            octx.fillStyle = '#f8fafc';
+            octx.font = '800 13px sans-serif';
+            octx.textAlign = 'center';
+            octx.fillText('🐻 미스터리 볼링공 추첨통 🎳', cx, 24);
+
+            const balls = revealQueue.map((_, idx) => {
+                const ang = Math.random() * Math.PI * 2;
+                const dist = Math.random() * (drumR - 22);
+                return {
+                    x: cx + Math.cos(ang) * dist,
+                    y: cy + Math.sin(ang) * dist,
+                    vx: (Math.random() - 0.5) * 260,
+                    vy: (Math.random() - 0.5) * 260,
+                    r: 13.5,
+                    color: MYSTERY.neutralBalls[idx % MYSTERY.neutralBalls.length],
+                    active: true
+                };
+            });
+
+            let ejected = null;
+            let drumAngle = 0;
+            let currentIdx = 0;
+            let phase = 0;
+            const perSec = { 1: 0.75, 2: 0.38, 4: 0.16 };
+            let lastTime = performance.now();
+
+            function frame(now) {
+                if (runId !== appState.runId) return;
+                const dt = Math.min((now - lastTime) / 1000, 0.05);
+                lastTime = now;
+
+                phase += dt / (perSec[appState.speed] || 0.38);
+                drumAngle += (2.8 + appState.speed * 1.4) * dt;
+
+                if (phase >= 1) {
+                    phase = 0;
+                    const item = revealQueue[currentIdx];
+                    if (balls[currentIdx]) balls[currentIdx].active = false;
+                    ejected = { x: cx, y: cy - drumR * 0.2, vy: -320, r: 16, color: TEAM_THEMES[item.teamIdx].color, life: 1 };
+                    SoundFX.playRevealChime(currentIdx);
+                    setTopBanner(item.member, item.teamIdx, `${currentIdx + 1}/${revealQueue.length}`);
+                    addPlayerToLiveBoard(item.member, item.teamIdx);
+                    progressBadge.textContent = `추첨 중 (${currentIdx + 1} / ${revealQueue.length})`;
+                    currentIdx++;
+                    if (currentIdx >= revealQueue.length) {
+                        finishAnimationAndRevealResults(false);
+                        return;
+                    }
+                }
+
+                ctx.drawImage(bgCanvas, 0, 0, width, height);
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.fillStyle = 'rgba(148,163,184,0.14)';
+                ctx.beginPath();
+                ctx.arc(0, 0, drumR, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.save();
+                ctx.rotate(drumAngle);
+                ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+                ctx.lineWidth = 3.5;
+                for (let i = 0; i < 4; i++) {
+                    const a = i * (Math.PI / 2);
+                    ctx.beginPath();
+                    ctx.moveTo(0, 0);
+                    ctx.lineTo(Math.cos(a) * (drumR - 6), Math.sin(a) * (drumR - 6));
+                    ctx.stroke();
+                }
+                ctx.restore();
+
+                const boost = 0.8 + appState.speed * 0.35;
+                for (let i = 0; i < balls.length; i++) {
+                    const b = balls[i];
+                    if (!b.active) continue;
+                    b.vy += 400 * dt;
+                    b.x += b.vx * dt * boost;
+                    b.y += b.vy * dt * boost;
+                    const dx = b.x - cx;
+                    const dy = b.y - cy;
+                    const dist = Math.hypot(dx, dy);
+                    const maxD = drumR - b.r - 4;
+                    if (dist > maxD) {
+                        const nx = dx / dist;
+                        const ny = dy / dist;
+                        b.x = cx + nx * maxD;
+                        b.y = cy + ny * maxD;
+                        const dot = b.vx * nx + b.vy * ny;
+                        b.vx = (b.vx - 1.9 * dot * nx) + (Math.random() - 0.5) * 60;
+                        b.vy = (b.vy - 1.9 * dot * ny) - Math.random() * 50;
+                    }
+                    ctx.beginPath();
+                    ctx.arc(b.x - cx, b.y - cy, b.r, 0, Math.PI * 2);
+                    ctx.fillStyle = b.color;
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(251,191,36,0.6)';
+                    ctx.lineWidth = 1.4;
+                    ctx.stroke();
+                    ctx.fillStyle = '#fef3c7';
+                    ctx.font = '800 11px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('?', b.x - cx, b.y - cy + 0.5);
+                }
+
+                ctx.lineWidth = 6;
+                ctx.strokeStyle = '#fbbf24';
+                ctx.beginPath();
+                ctx.arc(0, 0, drumR, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+
+                if (ejected && ejected.life > 0) {
+                    ejected.y += ejected.vy * dt;
+                    ejected.r += 24 * dt;
+                    ejected.life -= 3.2 * dt;
+                    ctx.save();
+                    ctx.globalAlpha = Math.max(0, ejected.life);
+                    ctx.fillStyle = ejected.color;
+                    ctx.beginPath();
+                    ctx.arc(ejected.x, ejected.y, ejected.r, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                appState.rafId = requestAnimationFrame(frame);
+            }
+            progressBadge.textContent = `추첨 시작! (0 / ${revealQueue.length})`;
+            appState.rafId = requestAnimationFrame(frame);
+        }
+
+        /* =====================================================================
+         * 10. 모드 4: 🎳 스트라이크 핀 추첨 (ZERO SPOILER)
+         * ===================================================================== */
+        function runStrikeAnimation(runId) {
+            const canvas = document.getElementById('stageCanvas');
+            const progressBadge = document.getElementById('stageProgressBadge');
+            const { teams } = appState.currentResult;
+
+            let revealQueue = [];
+            teams.forEach((team, tIdx) => {
+                team.members.forEach(member => revealQueue.push({ member, teamIdx: tIdx }));
+            });
+            revealQueue = shuffleArray(revealQueue);
+
+            const { ctx, width, height, dpr } = setupCanvasDPI(canvas, 300);
+            const { off: laneBg, octx } = createOffscreen(width, height, dpr);
+
+            octx.fillStyle = '#0f172a';
+            octx.fillRect(0, 0, width, height);
+            const topW = Math.min(width * 0.42, 210);
+            const botW = Math.min(width * 0.86, 460);
+            const topY = 44;
+
+            const wood = octx.createLinearGradient(0, topY, 0, height);
+            wood.addColorStop(0, '#d97706');
+            wood.addColorStop(0.4, '#f59e0b');
+            wood.addColorStop(1, '#fde68a');
+            octx.fillStyle = wood;
+            octx.beginPath();
+            octx.moveTo(width / 2 - topW / 2, topY);
+            octx.lineTo(width / 2 + topW / 2, topY);
+            octx.lineTo(width / 2 + botW / 2, height);
+            octx.lineTo(width / 2 - botW / 2, height);
+            octx.closePath();
+            octx.fill();
+
+            octx.fillStyle = '#f8fafc';
+            octx.font = '800 13px sans-serif';
+            octx.textAlign = 'center';
+            octx.fillText('🐻 곰탱이 B.C · STRIKE LANE 🎳', width / 2, 24);
+
+            function createPins() {
+                const pins = [];
+                for (let r = 0; r < 4; r++) {
+                    const count = 4 - r;
+                    const y = 58 + r * 13;
+                    const sx = width / 2 - ((count - 1) * 18) / 2;
+                    for (let c = 0; c < count; c++) {
+                        pins.push({ x: sx + c * 18, y, vx: 0, vy: 0, angle: 0, vAngle: 0, scale: 0.75 + r * 0.06 });
+                    }
+                }
+                return pins;
+            }
+
+            const perSec = { 1: 0.80, 2: 0.42, 4: 0.18 };
+            let currentIdx = 0;
+            let phase = 0;
+            let struck = false;
+            let pins = createPins();
+            let lastTime = performance.now();
+
+            SoundFX.playRoll((perSec[appState.speed] || 0.42) * 0.48);
+
+            function frame(now) {
+                if (runId !== appState.runId) return;
+                const dt = Math.min((now - lastTime) / 1000, 0.05);
+                lastTime = now;
+
+                phase += dt / (perSec[appState.speed] || 0.42);
+                const item = revealQueue[currentIdx];
+                const theme = TEAM_THEMES[item.teamIdx];
+                const targetY = 100;
+
+                if (phase >= 0.48 && !struck) {
+                    struck = true;
+                    SoundFX.playStrike();
+                    setTopBanner(item.member, item.teamIdx, 'STRIKE! 🎳');
+                    addPlayerToLiveBoard(item.member, item.teamIdx);
+                    progressBadge.textContent = `스트라이크 (${currentIdx + 1} / ${revealQueue.length})`;
+                    pins.forEach(pin => {
+                        pin.vx = (pin.x - width / 2) * 7.5 + (Math.random() - 0.5) * 300;
+                        pin.vy = -(220 + Math.random() * 260);
+                        pin.vAngle = (Math.random() - 0.5) * 16;
+                    });
+                }
+
+                if (phase >= 1) {
+                    currentIdx++;
+                    if (currentIdx >= revealQueue.length) {
+                        ctx.drawImage(laneBg, 0, 0, width, height);
+                        finishAnimationAndRevealResults(false);
+                        return;
+                    }
+                    phase = 0;
+                    struck = false;
+                    pins = createPins();
+                    SoundFX.playRoll((perSec[appState.speed] || 0.42) * 0.48);
+                }
+
+                ctx.drawImage(laneBg, 0, 0, width, height);
+                pins.forEach(pin => {
+                    if (struck) {
+                        pin.x += pin.vx * dt;
+                        pin.y += pin.vy * dt;
+                        pin.vy += 680 * dt;
+                        pin.angle += pin.vAngle * dt;
+                    }
+                    ctx.save();
+                    ctx.translate(pin.x, pin.y);
+                    ctx.rotate(pin.angle);
+                    ctx.scale(pin.scale, pin.scale);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.ellipse(0, 6, 6.5, 11, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(0, -7, 4.4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#ef4444';
+                    ctx.fillRect(-4, -3, 8, 2.2);
+                    ctx.restore();
+                });
+
+                const rollT = Math.min(1, phase / 0.48);
+                const ballY = phase < 0.48 ? (height + 12) - (height + 12 - targetY) * rollT : targetY - (phase - 0.48) * 80;
+                const ballR = Math.max(11, 28 - 13 * rollT);
+
+                ctx.save();
+                ctx.translate(width / 2, ballY);
+                ctx.fillStyle = struck ? theme.color : '#334155';
+                ctx.beginPath();
+                ctx.arc(0, 0, ballR, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = struck ? '#ffffff' : '#fbbf24';
+                ctx.lineWidth = 1.6;
+                ctx.stroke();
+                ctx.restore();
+
+                if (struck) {
+                    ctx.save();
+                    ctx.font = 'italic 900 38px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.lineWidth = 6;
+                    ctx.strokeStyle = '#0f172a';
+                    ctx.strokeText('STRIKE!', width / 2, height * 0.54);
+                    ctx.fillStyle = '#fde047';
+                    ctx.fillText('STRIKE!', width / 2, height * 0.54);
+                    ctx.restore();
+                }
+
+                appState.rafId = requestAnimationFrame(frame);
+            }
+            progressBadge.textContent = `스트라이크 시작! (0 / ${revealQueue.length})`;
+            appState.rafId = requestAnimationFrame(frame);
+        }
+
+        /* =====================================================================
+         * 11. 최종 결과 렌더링 & 카톡 공지 복사
+         * ===================================================================== */
+        function renderFinalResults() {
+            const res = appState.currentResult;
+            if (!res) return;
+
+            document.getElementById('outputArea').classList.remove('hidden');
+            const teamsContainer = document.getElementById('teamsContainer');
+            const lanesContainer = document.getElementById('lanesContainer');
+            teamsContainer.innerHTML = '';
+            lanesContainer.innerHTML = '';
+
+            const diffStr = res.minAvgDiff.toFixed(2);
+            document.getElementById('balanceSummaryText').textContent =
+                `⚖️ 팀 간 평균 에버 격차: ${diffStr}점 (${res.minAvgDiff <= 1.0 ? '초정밀 황금 밸런스! ✨' : '최적 밸런스 매칭 완료!'})`;
+
+            teamsContainer.className = `teams-grid ${res.numTeams === 3 ? 'cols-3' : 'cols-2'}`;
+
+            res.teams.forEach((team, idx) => {
+                const theme = TEAM_THEMES[idx];
+                const avgScore = team.members.length > 0 ? (team.sum / team.members.length).toFixed(2) : '0.00';
+                const pills = team.members.map(m => `
+                    <span class="member-pill" style="background:${theme.softBg};border-color:${theme.softBorder};color:${theme.text};">
+                        ${m.rawName} <span style="font-size:10px;opacity:0.75;">${m.score.toFixed(0)}</span>
+                    </span>
+                `).join('');
+
+                const card = document.createElement('div');
+                card.className = 'final-team-card';
+                card.style.borderColor = theme.softBorder;
+                card.innerHTML = `
+                    <div class="final-team-banner" style="background:${theme.color};">
+                        <span>${theme.emoji} [${theme.name}]</span>
+                        <span style="font-size:12px;background:rgba(255,255,255,0.22);padding:3px 10px;border-radius:999px;">
+                            ${team.members.length}명 · 여성 ${team.f_count}명
+                        </span>
+                    </div>
+                    <div class="final-team-body">
+                        <div class="pill-wrap">${pills}</div>
+                        <div class="avg-box">
+                            <span style="font-size:12px;font-weight:700;color:#64748b;">팀 평균 에버리지</span>
+                            <strong style="font-size:18px;color:${theme.color};">${avgScore}</strong>
+                        </div>
+                    </div>
+                `;
+                teamsContainer.appendChild(card);
+            });
+
+            res.lanes.forEach((lane, idx) => {
+                const itemsHtml = lane.length > 0
+                    ? lane.map(p => {
+                        const theme = TEAM_THEMES[p.teamIdx];
+                        return `
+                            <li class="lane-item">
+                                <span class="lane-tag" style="background:${theme.softBg};color:${theme.text};">팀${p.teamIdx + 1}</span>
+                                <span>${p.rawName}</span>
+                            </li>
+                        `;
+                    }).join('')
+                    : `<li style="font-size:12px;color:#94a3b8;text-align:center;padding:8px 0;">배정 인원 없음</li>`;
+
+                const card = document.createElement('div');
+                card.className = 'lane-card';
+                card.innerHTML = `
+                    <div class="lane-head">
+                        <span>🎳 레인 ${idx + 1}</span>
+                        <span style="font-size:11px;color:#64748b;background:#fff;padding:2px 8px;border-radius:999px;border:1px solid #e2e8f0;">${lane.length}명</span>
+                    </div>
+                    <ul class="lane-list">${itemsHtml}</ul>
+                `;
+                lanesContainer.appendChild(card);
+            });
+        }
+
+        function copyKakaoNotice() {
+            const res = appState.currentResult;
+            if (!res) return;
+
+            const today = new Date();
+            const dateStr = `${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')}`;
+
+            const lines = [
+                '🐻 곰탱이B.C 정기전 팀 & 레인 공지 🎳',
+                `📅 일자: ${dateStr}`,
+                `⚖️ 팀 간 평균 격차: ${res.minAvgDiff.toFixed(2)}점`,
+                '',
+                '=== 🏆 팀 구성 결과 ==='
+            ];
+
+            res.teams.forEach((team, idx) => {
+                const avg = team.members.length > 0 ? (team.sum / team.members.length).toFixed(2) : '0.00';
+                const names = team.members.map(m => m.rawName).join(', ');
+                lines.push(`${TEAM_THEMES[idx].emoji} [팀 ${idx + 1}] (${team.members.length}명 / 여성 ${team.f_count}명 / 평균 ${avg})`);
+                lines.push(`👉 ${names}`);
+            });
+
+            if (res.excluded && res.excluded.length > 0) {
+                lines.push('');
+                lines.push(`⚠️ 인원 조정 제외: ${res.excluded.map(p => `${p.rawName}(${p.score.toFixed(1)})`).join(', ')}`);
+            }
+
+            lines.push('');
+            lines.push('=== 🎳 레인 배정 결과 ===');
+            res.lanes.forEach((lane, idx) => {
+                lines.push(`• 레인 ${idx + 1} (${lane.length}명): ${lane.map(p => p.label).join(', ')}`);
+            });
+            lines.push('');
+            lines.push('모두 즐거운 볼링 치세요! 스트라이크 가즈아~! 🔥');
+
+            const text = lines.join('\n');
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                ta.style.position = 'fixed';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                const ok = document.execCommand('copy');
+                document.body.removeChild(ta);
+                if (ok) showToast('📋 카톡 공지용 텍스트가 복사되었습니다!', 'success');
+                else showToast('복사에 실패했습니다. 수동으로 복사해 주세요.', 'warning');
+            } catch (e) {
+                showToast('클립보드 복사를 지원하지 않는 환경입니다.', 'warning');
+            }
+        }
+
+        /* =====================================================================
+         * 12. DOMContentLoaded 초기화 및 이벤트 바인딩
+         * ===================================================================== */
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('sampleBtn').addEventListener('click', runSampleMode);
+            document.getElementById('scoreFile').addEventListener('change', handleFileSelect);
+            document.getElementById('attendFile').addEventListener('change', handleFileSelect);
+            document.getElementById('soundToggleBtn').addEventListener('click', toggleSound);
+            document.getElementById('startBtn').addEventListener('click', processFiles);
+            document.getElementById('replaySameBtn').addEventListener('click', () => {
+                if (appState.currentResult) startAnimationStage();
+            });
+            document.getElementById('replayResultBtn').addEventListener('click', () => {
+                if (appState.currentResult) startAnimationStage();
+            });
+            document.getElementById('skipAnimBtn').addEventListener('click', skipAnimation);
+            document.getElementById('ladderAllBtn').addEventListener('click', ladderRunAll);
+            document.getElementById('ladderSeqBtn').addEventListener('click', ladderRunSequential);
+            document.getElementById('copyKakaoBtn').addEventListener('click', copyKakaoNotice);
+            document.getElementById('rerunBtn').addEventListener('click', () => {
+                if (appState.lastAttendees) executeMatchingAndAnimate(appState.lastAttendees, appState.isSampleData);
+            });
+
+            document.querySelectorAll('#modeSelector .mode-card').forEach(card => {
+                card.addEventListener('click', () => selectMode(card.dataset.mode));
+            });
+
+            document.querySelectorAll('.speed-btn, .stage-speed-btn').forEach(btn => {
+                btn.addEventListener('click', () => setSpeed(Number(btn.dataset.speed)));
+            });
+
+            // 창 크기 변경 시 사다리/달리기 리사이즈 대응
+            let resizeTimer = null;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    if (appState.mode === 'race' && appState.raceState) {
+                        const st = appState.raceState;
+                        const { ctx, width, dpr } = setupCanvasDPI(st.canvas, st.height);
+                        st.ctx = ctx; st.width = width; st.dpr = dpr;
+                        st.startX = Math.max(46, Math.min(72, width * 0.11));
+                        st.finishX = Math.max(st.startX + 140, width - Math.max(82, Math.min(118, width * 0.19)));
+                        st.runners.forEach(r => { r.x = st.startX + (st.finishX - st.startX) * r.progress; });
+                        buildRaceStaticCache(st);
+                        drawRaceFrame(st, 0);
+                    } else if (appState.mode === 'ladder' && appState.ladderState) {
+                        const st = appState.ladderState;
+                        const { ctx, width, dpr } = setupCanvasDPI(st.canvas, st.height);
+                        const N = st.topPlayers.length;
+                        const padX = Math.max(28, Math.min(52, width / (N * 1.7)));
+                        st.ctx = ctx; st.width = width; st.dpr = dpr; st.padX = padX;
+                        st.getX = (col) => N === 1 ? width / 2 : padX + (col / (N - 1)) * (width - padX * 2);
+                        st.paths.forEach((p, idx) => {
+                            const updated = computeLadderPath(idx, st.rungs, st.getX, st.getY, st.topY, st.bottomY);
+                            p.points = updated.points; p.segLens = updated.segLens; p.totalLen = updated.totalLen;
+                        });
+                        buildLadderStaticCache(st);
+                        drawLadderDynamicFrame(st, 0);
+                    }
+                }, 120);
+            });
+        });
+    </script>
+</body>
+</html>
