@@ -752,7 +752,7 @@
                 </div>
 
                 <button type="button" id="sampleBtn" class="btn btn-sample">
-                    <span>🧪</span> 샘플 데이터로 바로 체험하기 (16명)
+                    <span>🧪</span> 샘플 데이터로 바로 체험하기 (20명)
                 </button>
 
                 <div class="divider-text">또는 엑셀 파일 업로드</div>
@@ -1347,22 +1347,26 @@
 
         function createSampleAttendees() {
             const rawSample = [
-                { rawName: '강민선W', score: 178.4 },
-                { rawName: '강상귀', score: 196.2 },
-                { rawName: '한종현', score: 189.5 },
-                { rawName: '김민수', score: 182.1 },
-                { rawName: '이수영W', score: 164.8 },
-                { rawName: '이승훈', score: 191.0 },
-                { rawName: '박지훈', score: 175.6 },
-                { rawName: '정하늘W', score: 158.2 },
-                { rawName: '최도윤', score: 169.4 },
-                { rawName: '윤서연W', score: 161.5 },
-                { rawName: '장우진', score: 184.7 },
-                { rawName: '조은비W', score: 152.9 },
-                { rawName: '임재현', score: 172.3 },
-                { rawName: '송예린W', score: 148.6 },
-                { rawName: '신태양', score: 166.1 },
-                { rawName: '오현우', score: 155.8 }
+                { rawName: '정욱', score: 180.5 },
+                { rawName: '제나', score: 200.0 },
+                { rawName: '리브', score: 180.1 },
+                { rawName: '건호', score: 182.1 },
+                { rawName: '민수', score: 164.8 },
+                { rawName: '도훈', score: 191.0 },
+                { rawName: '지우', score: 175.6 },
+                { rawName: '안나', score: 158.2 },
+                { rawName: '원희', score: 169.4 },
+                { rawName: '도윤', score: 161.5 },
+                { rawName: '도영', score: 184.7 },
+                { rawName: '은비', score: 152.9 },
+                { rawName: '재현', score: 172.3 },
+                { rawName: '예린', score: 148.6 },
+                { rawName: '영웅', score: 166.1 },
+                { rawName: '리나', score: 155.8 }
+                { rawName: '윤아', score: 155.8 }
+                { rawName: '재석', score: 155.8 }
+                { rawName: '민주', score: 155.8 }
+                { rawName: '유하', score: 155.8 }
             ];
             return rawSample.map(item => {
                 const nameStr = String(item.rawName).replace(/\s/g, '');
@@ -1376,7 +1380,7 @@
             SoundFX.init();
             appState.isSampleData = true;
             const badge = document.getElementById('dataStatusBadge');
-            badge.textContent = '샘플 16명 적용중 🧪';
+            badge.textContent = '샘플 20명 적용중 🧪';
             badge.className = 'status-badge sample';
 
             const sample = createSampleAttendees();
@@ -2148,12 +2152,12 @@
                     ctx.font = '900 10px sans-serif';
                     ctx.fillStyle = '#fde047';
                     ctx.textAlign = 'center';
-                    ctx.fillText('⚡', rx, ry - 16);
+                    ctx.fillText('⚡', rx, ry - 20);
                 } else if (!r.finished && r.currentEvent === 'stumble') {
                     ctx.font = '900 10px sans-serif';
                     ctx.fillStyle = '#38bdf8';
                     ctx.textAlign = 'center';
-                    ctx.fillText('💦', rx, ry - 16);
+                    ctx.fillText('💦', rx, ry - 20);
                 }
 
                 // 이름표
@@ -2712,7 +2716,7 @@
                     phase = 0;
                     const item = revealQueue[currentIdx];
                     if (balls[currentIdx]) balls[currentIdx].active = false;
-                    ejected = { x: cx, y: cy - drumR * 0.2, vy: -320, r: 16, color: TEAM_THEMES[item.teamIdx].color, life: 1 };
+                    ejected = { x: cx, y: cy - drumR * 0.2, vy: -320, r: 20, color: TEAM_THEMES[item.teamIdx].color, life: 1 };
                     SoundFX.playRevealChime(currentIdx);
                     setTopBanner(item.member, item.teamIdx, `${currentIdx + 1}/${revealQueue.length}`);
                     addPlayerToLiveBoard(item.member, item.teamIdx);
@@ -2887,7 +2891,7 @@
                     pins.forEach(pin => {
                         pin.vx = (pin.x - width / 2) * 7.5 + (Math.random() - 0.5) * 300;
                         pin.vy = -(220 + Math.random() * 260);
-                        pin.vAngle = (Math.random() - 0.5) * 16;
+                        pin.vAngle = (Math.random() - 0.5) * 20;
                     });
                 }
 
