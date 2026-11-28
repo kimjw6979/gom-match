@@ -8,6 +8,8 @@
     <title>🐻곰탱이B.C🎳 - 제비뽑곰</title>
     <!-- SheetJS (Excel 파싱) - defer 적용으로 오프라인/차단 환경에서도 화면 렌더링에 영향 없음 -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js" defer></script>
+    <!-- ExcelJS (집계시트 수식/서식 유지 저장용) -->
+    <script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js" defer></script>
     <style>
         /* =====================================================================
          * 기본 리셋 및 테마 변수 (외부 CSS 프레임워크 0% - 100% 자체 스타일)
@@ -806,12 +808,23 @@
                     </div>
                 </div>
 
+                <div class="form-grid-2">
+                    <div>
+                        <label for="laneStrategy" class="form-label">레인 배정 방식</label>
+                        <select id="laneStrategy" class="form-select">
+                            <option value="cross">지그재그 교차</option>
+                            <option value="group">팀별 연속 배정</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="femaleHandicapInput" class="form-label">🎀 여성 핸디 (점)</label>
+                        <input type="number" id="femaleHandicapInput" min="0" max="100" value="45" class="form-input">
+                    </div>
+                </div>
+
                 <div>
-                    <label for="laneStrategy" class="form-label">레인 배정 방식</label>
-                    <select id="laneStrategy" class="form-select">
-                        <option value="cross">지그재그 교차 (팀1-팀2-팀1-팀2...)</option>
-                        <option value="group">팀별 연속 배정 (팀1-팀1-팀1-팀2-팀2...)</option>
-                    </select>
+                    <label for="templateFile" class="form-label">📊 집계시트 양식(.xlsx) <span style="color:#64748b;font-weight:500;">(선택 · 수식유지)</span></label>
+                    <input type="file" id="templateFile" accept=".xlsx" class="file-input">
                 </div>
             </div>
 
@@ -951,6 +964,7 @@
                         </div>
                     </div>
                     <div class="flex-row">
+                        <button type="button" id="exportSummaryExcelBtn" class="btn btn-soft" style="background:#059669;color:#fff;">📊 집계시트(.xlsx) 적용 다운로드</button>
                         <button type="button" id="copyKakaoBtn" class="btn btn-kakao">📋 카톡 공지용 텍스트 복사</button>
                         <button type="button" id="replayResultBtn" class="btn btn-soft">🔁 연출 다시 보기</button>
                         <button type="button" id="rerunBtn" class="btn btn-neutral">🔄 새로 팀 짜기</button>
@@ -1477,10 +1491,10 @@
                 { rawName: '예린W', score: 148.6 },
                 { rawName: '영웅', score: 166.1 },
                 { rawName: '리나W', score: 155.8 },
-                { rawName: '윤아W', score: 155.8 },
-                { rawName: '재석', score: 155.8 },
-                { rawName: '민주W', score: 155.8 },
-                { rawName: '유하W', score: 155.8 }
+                { rawName: '윤아W', score: 158.0 },
+                { rawName: '재석', score: 171.2 },
+                { rawName: '민주W', score: 154.5 },
+                { rawName: '유하W', score: 160.3 }
             ];
             return rawSample.map(item => {
                 const nameStr = String(item.rawName).replace(/\s/g, '');
@@ -1704,6 +1718,9 @@
                 const players = shuffleArray(team.members.map(m => ({
                     label: `[팀${tIdx + 1}] ${m.rawName}`,
                     rawName: m.rawName,
+                    cleanName: m.cleanName,
+                    isFemale: m.isFemale,
+                    score: m.score,
                     teamIdx: tIdx
                 })));
                 if (teamLaneMap[tIdx].length > 0) {
@@ -3213,6 +3230,90 @@
             }
         }
 
+        async function exportSummaryExcel() {
+            const res = appState.currentResult;
+            if (!res) {
+                showToast('먼저 팀 구성 및 레인 배정을 완료해 주세요.', 'warning');
+                return;
+            }
+            if (typeof ExcelJS === 'undefined') {
+                showToast('ExcelJS 라이브러리가 로드되지 않았습니다. 인터넷 연결을 확인해 주세요.', 'warning');
+                return;
+            }
+
+            const templateFile = document.getElementById('templateFile').files[0];
+            if (!templateFile) {
+                showToast('왼쪽 사이드바에서 집계시트 양식(.xlsx) 파일을 먼저 첨부해 주세요!', 'warning');
+                return;
+            }
+
+            const femaleHandicap = parseInt(document.getElementById('femaleHandicapInput').value, 10) || 0;
+
+            try {
+                const buffer = await templateFile.arrayBuffer();
+                const workbook = new ExcelJS.Workbook();
+                await workbook.xlsx.load(buffer);
+
+                // '★★집계★★' 시트 찾기 (없으면 첫 번째 시트 사용)
+                const sheet = workbook.getWorksheet('★★집계★★') || workbook.worksheets[0];
+                if (!sheet) {
+                    showToast('시트를 찾을 수 없습니다.', 'warning');
+                    return;
+                }
+
+                // 날짜 자동 업데이트 (H5 셀이 비어있거나 '년' 포함 시)
+                const today = new Date();
+                const dateCell = sheet.getCell('H5');
+                if (dateCell && typeof dateCell.value === 'string' && dateCell.value.includes('년')) {
+                    dateCell.value = `${today.getFullYear()}년 ${String(today.getMonth() + 1).padStart(2, '0')}월 ${String(today.getDate()).padStart(2, '0')}일`;
+                }
+
+                // 각 레인별 5행 블록(7~10, 12~15, 17~20...)에 이름(D열), 에버(C열-수식 없을 때만), 여성핸디(H열) 입력
+                res.lanes.forEach((lane, laneIdx) => {
+                    const startRow = 7 + laneIdx * 5;
+                    for (let slot = 0; slot < 4; slot++) {
+                        const rowNum = startRow + slot;
+                        const player = lane[slot];
+                        const avgCell = sheet.getCell(rowNum, 3);  // C열: 에버
+                        const nameCell = sheet.getCell(rowNum, 4); // D열: 이름
+                        const hcpCell = sheet.getCell(rowNum, 8);  // H열: 핸디
+
+                        const avgHasFormula = avgCell.value && typeof avgCell.value === 'object' && 'formula' in avgCell.value;
+
+                        if (player) {
+                            nameCell.value = player.cleanName; // W 제거한 순수 이름
+                            if (!avgHasFormula) {
+                                avgCell.value = Math.round(player.score);
+                            }
+                            hcpCell.value = (player.isFemale && femaleHandicap > 0) ? femaleHandicap : null;
+                        } else {
+                            nameCell.value = null;
+                            if (!avgHasFormula) avgCell.value = null;
+                            hcpCell.value = null;
+                        }
+                    }
+                });
+
+                const outBuffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([outBuffer], {
+                    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `곰탱이BC_집계시트_${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showToast('📊 수식이 유지된 집계시트(.xlsx)가 다운로드되었습니다!', 'success');
+            } catch (err) {
+                console.error(err);
+                showToast('집계시트 생성 중 오류가 발생했습니다: ' + err.message, 'warning');
+            }
+        }
+
         /* =====================================================================
          * 12. DOMContentLoaded 초기화 및 이벤트 바인딩
          * ===================================================================== */
@@ -3232,6 +3333,7 @@
             document.getElementById('ladderAllBtn').addEventListener('click', ladderRunAll);
             document.getElementById('ladderSeqBtn').addEventListener('click', ladderRunSequential);
             document.getElementById('copyKakaoBtn').addEventListener('click', copyKakaoNotice);
+            document.getElementById('exportSummaryExcelBtn').addEventListener('click', exportSummaryExcel);
             document.getElementById('rerunBtn').addEventListener('click', () => {
                 if (appState.lastAttendees) executeMatchingAndAnimate(appState.lastAttendees, appState.isSampleData);
             });
