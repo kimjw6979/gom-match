@@ -788,13 +788,11 @@
                 <div class="divider-text">또는 엑셀 파일 업로드</div>
 
                 <div>
-                    <label for="scoreFile" class="form-label">분기에버.xlsx (에버리지)</label>
-                    <input type="file" id="scoreFile" accept=".xlsx" class="file-input">
-                </div>
-
-                <div>
-                    <label for="attendFile" class="form-label">참석자명단.xlsx</label>
-                    <input type="file" id="attendFile" accept=".xlsx" class="file-input green">
+                    <label for="memberFile" class="form-label">📋 통합 명단.xlsx <span style="color:#2563eb;font-weight:600;">(이름·성별·에버·참석)</span></label>
+                    <input type="file" id="memberFile" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" class="file-input green">
+                    <div style="font-size:11px;color:#64748b;margin-top:4px;line-height:1.4;">
+                        💡 <strong>성별</strong> 열(<code>남/여</code>) 또는 이름 끝 <code>W</code> 모두 자동 인식됩니다.
+                    </div>
                 </div>
 
                 <div class="form-grid-2">
@@ -824,7 +822,7 @@
 
                 <div>
                     <label for="templateFile" class="form-label">📊 집계시트 양식(.xlsx) <span style="color:#64748b;font-weight:500;">(선택 · 수식유지)</span></label>
-                    <input type="file" id="templateFile" accept=".xlsx" class="file-input">
+                    <input type="file" id="templateFile" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="file-input">
                 </div>
             </div>
 
@@ -1414,16 +1412,15 @@
         }
 
         function handleFileSelect() {
-            const sFile = document.getElementById('scoreFile').files[0];
-            const aFile = document.getElementById('attendFile').files[0];
+            const mFile = document.getElementById('memberFile').files[0];
             const badge = document.getElementById('dataStatusBadge');
-            if (sFile && aFile) {
+            if (mFile) {
                 appState.isSampleData = false;
-                badge.textContent = '엑셀 준비완료 ✅';
+                badge.textContent = '통합명단 준비완료 ✅';
                 badge.className = 'status-badge ready';
-            } else if (sFile || aFile) {
-                badge.textContent = '1/2 파일 선택됨';
-                badge.className = 'status-badge partial';
+            } else {
+                badge.textContent = '파일 대기중';
+                badge.className = 'status-badge';
             }
         }
 
@@ -1439,7 +1436,7 @@
             return arr;
         }
 
-        function readExcel(file, headerIndex) {
+        function readUnifiedExcel(file) {
             return new Promise((resolve, reject) => {
                 if (typeof XLSX === 'undefined') {
                     reject(new Error('엑셀 읽기 라이브러리(SheetJS)가 로드되지 않았습니다. 인터넷 연결을 확인하거나 샘플 체험 모드를 이용해 주세요.'));
@@ -1452,8 +1449,8 @@
                         const workbook = XLSX.read(data, { type: 'array' });
                         const sheetName = workbook.SheetNames[0];
                         const sheet = workbook.Sheets[sheetName];
-                        const json = XLSX.utils.sheet_to_json(sheet, { range: headerIndex });
-                        resolve(json);
+                        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+                        resolve(rows);
                     } catch (err) {
                         reject(err);
                     }
@@ -1461,6 +1458,84 @@
                 reader.onerror = () => reject(new Error('파일을 읽는 중 오류가 발생했습니다.'));
                 reader.readAsArrayBuffer(file);
             });
+        }
+
+        function parseUnifiedAttendees(rows) {
+            if (!rows || rows.length === 0) {
+                throw new Error('엑셀 파일에 데이터가 없습니다.');
+            }
+
+            // 헤더 행 자동 탐색 (상위 15행 중 '이름/성명/회원명' 열 찾기)
+            let headerRowIdx = -1;
+            let nameCol = -1, genderCol = -1, scoreCol = -1, attendCol = -1;
+
+            const norm = (v) => String(v || '').replace(/\s+/g, '').toUpperCase();
+
+            for (let r = 0; r < Math.min(rows.length, 15); r++) {
+                const row = rows[r] || [];
+                let nCol = -1, gCol = -1, sCol = -1, aCol = -1;
+                for (let c = 0; c < row.length; c++) {
+                    const h = norm(row[c]);
+                    if (!h) continue;
+                    if (nCol === -1 && (h === '이름' || h === '성명' || h === '회원명')) nCol = c;
+                    else if (gCol === -1 && (h === '성별' || h === '남여' || h === '성')) gCol = c;
+                    else if (sCol === -1 && (h === '평균에버' || h === '적용에버' || h === '에버리지' || h === '에버' || h === '평균')) sCol = c;
+                    else if (aCol === -1 && (h === '참석' || h === '참석여부')) aCol = c;
+                }
+                if (nCol !== -1) {
+                    headerRowIdx = r;
+                    nameCol = nCol;
+                    genderCol = gCol;
+                    scoreCol = sCol;
+                    attendCol = aCol;
+                    break;
+                }
+            }
+
+            if (headerRowIdx === -1) {
+                throw new Error("'이름' 열을 찾을 수 없습니다. 엑셀 헤더에 '이름', '성별', '평균에버', '참석' 열이 있는지 확인해 주세요.");
+            }
+            if (scoreCol === -1) {
+                throw new Error("'평균에버'(또는 '에버'/'적용에버') 열을 찾을 수 없습니다.");
+            }
+
+            const femaleTokens = new Set(['여', '여성', '여자', 'W', 'F', 'FEMALE']);
+            const attendTokens = new Set(['O', '○', '참석', 'Y', 'YES', '1']);
+            const attendees = [];
+
+            for (let r = headerRowIdx + 1; r < rows.length; r++) {
+                const row = rows[r];
+                if (!row) continue;
+
+                const rawNameCell = String(row[nameCol] || '').trim();
+                if (!rawNameCell) continue;
+
+                // 참석 열이 있는 경우 O/참석 표시된 인원만 포함
+                if (attendCol !== -1) {
+                    const attVal = norm(row[attendCol]);
+                    if (!attendTokens.has(attVal)) continue;
+                }
+
+                const compactName = rawNameCell.replace(/\s+/g, '');
+                const endsWithW = compactName.endsWith('W') || compactName.endsWith('w');
+                const cleanName = endsWithW ? compactName.slice(0, -1) : compactName;
+
+                let isFemale = endsWithW;
+                if (genderCol !== -1) {
+                    const gVal = norm(row[genderCol]);
+                    if (femaleTokens.has(gVal)) isFemale = true;
+                }
+
+                const score = parseFloat(String(row[scoreCol] || '0').replace(/,/g, '')) || 0;
+                attendees.push({
+                    rawName: cleanName,
+                    cleanName,
+                    isFemale,
+                    score
+                });
+            }
+
+            return attendees;
         }
 
         function getShuffledByTier(list, chunkSize) {
@@ -1518,56 +1593,29 @@
 
         async function processFiles() {
             SoundFX.init();
-            const scoreFile = document.getElementById('scoreFile').files[0];
-            const attendFile = document.getElementById('attendFile').files[0];
+            const memberFile = document.getElementById('memberFile').files[0];
 
-            if (!scoreFile || !attendFile) {
+            if (!memberFile) {
                 if (appState.isSampleData && appState.lastAttendees) {
                     executeMatchingAndAnimate(appState.lastAttendees, true);
                     return;
                 }
                 showAlertBanner(`
                     <div class="alert-box alert-error">
-                        ⚠️ 엑셀 파일 2개(분기에버.xlsx, 참석자명단.xlsx)를 모두 업로드해주세요.
+                        ⚠️ <strong>통합 명단(.xlsx)</strong> 파일을 업로드해주세요.
                         파일이 없다면 왼쪽의 <strong>🧪 샘플 데이터로 바로 체험하기</strong> 버튼을 눌러보세요!
                     </div>
                 `);
-                showToast('두 개의 엑셀 파일을 업로드하거나 샘플 체험을 눌러주세요!', 'warning');
+                showToast('통합 명단 엑셀 파일을 업로드하거나 샘플 체험을 눌러주세요!', 'warning');
                 return;
             }
 
             try {
-                const scoresData = await readExcel(scoreFile, 6);
-                const attendData = await readExcel(attendFile, 0);
-
-                const scoresMap = {};
-                scoresData.forEach(row => {
-                    const rawName = row['이 름'] || row['이름'];
-                    if (!rawName) return;
-                    const nameStr = String(rawName).replace(/\s/g, '');
-                    const isFemale = nameStr.endsWith('W') || nameStr.endsWith('w');
-                    const cleanName = isFemale ? nameStr.slice(0, -1) : nameStr;
-                    scoresMap[cleanName] = {
-                        rawName,
-                        cleanName,
-                        isFemale,
-                        score: parseFloat(row['평균에버']) || 0
-                    };
-                });
-
-                const attendees = [];
-                attendData.forEach(row => {
-                    const rawName = row['이름'] || row['이 름'];
-                    if (!rawName) return;
-                    const cleanName = String(rawName).replace(/\s/g, '');
-                    const status = String(row['참석'] || '').trim().toUpperCase();
-                    if (status === 'O' && scoresMap[cleanName]) {
-                        attendees.push(scoresMap[cleanName]);
-                    }
-                });
+                const rows = await readUnifiedExcel(memberFile);
+                const attendees = parseUnifiedAttendees(rows);
 
                 if (attendees.length === 0) {
-                    showAlertBanner(`<div class="alert-box alert-error">❌ 참석자(O)가 없습니다. 참석자명단.xlsx를 확인해주세요.</div>`);
+                    showAlertBanner(`<div class="alert-box alert-error">❌ 참석자(O)가 없습니다. 통합 명단 파일의 '참석' 열에 O 표시가 되어 있는지 확인해주세요.</div>`);
                     return;
                 }
 
@@ -3332,8 +3380,7 @@
          * ===================================================================== */
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('sampleBtn').addEventListener('click', runSampleMode);
-            document.getElementById('scoreFile').addEventListener('change', handleFileSelect);
-            document.getElementById('attendFile').addEventListener('change', handleFileSelect);
+            document.getElementById('memberFile').addEventListener('change', handleFileSelect);
             document.getElementById('soundToggleBtn').addEventListener('click', toggleSound);
             document.getElementById('startBtn').addEventListener('click', processFiles);
             document.getElementById('replaySameBtn').addEventListener('click', () => {
